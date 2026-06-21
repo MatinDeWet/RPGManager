@@ -51,7 +51,7 @@ Full-text over a mapped `NpgsqlTsVector` column instead of ILIKE:
 worlds = worlds.FullTextSearch(request, x => x.SearchVector, language: "english");
 ```
 
-## 3. Back it with an index (see `add-entity`)
+## 3. Back it with an index (see `add-entity-config`)
 
 ILIKE substring search is only index-backed with a **GIN + pg_trgm** index on the column (the `pg_trgm` extension is enabled in `CoreContext.OnModelCreating`). In the entity config:
 
@@ -61,7 +61,7 @@ entity.HasIndex(x => x.Name)
     .HasOperators("gin_trgm_ops");
 ```
 
-Full-text instead wants a mapped tsvector column (`HasGeneratedTsVectorColumn`) with its own GIN index. Add the index in the entity config and create a migration (see `add-entity`).
+Full-text instead wants a mapped tsvector column (`HasGeneratedTsVectorColumn`) with its own GIN index. Add the index in the entity config and create a migration (see `add-entity-config`).
 
 ## 4. Endpoint — expose the term
 
