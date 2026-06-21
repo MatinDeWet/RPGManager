@@ -1,11 +1,15 @@
 ---
 name: add-entity
-description: Scaffold a new persistence-ignorant domain entity and its EF Core configuration in the RPGManager solution. Use when adding a new database-backed entity (e.g. "add a Transaction entity with amount and date"). Creates the Entity<long> domain type (private setters, Create/Update factories, guard-clause validation) and the matching IEntityTypeConfiguration mapping, then reminds you to add a migration.
+description: Scaffold a new persistence-ignorant domain entity in the RPGManager solution and its EF Core mapping. Use when adding a new database-backed entity (e.g. "add a Transaction entity with amount and date"). Creates the Entity<long> domain type (private setters, Create/Update factories, guard-clause validation, two-way navigations) and then creates the matching IEntityTypeConfiguration via the add-entity-config skill, then reminds you to add a migration.
 ---
 
-# Add a domain entity + EF configuration
+# Add a domain entity (+ EF configuration)
 
-Two files, layered: the entity in `Shared.Domain`, the mapping in `Shared.Persistence`. Both services share these through the common kernel. Keep the domain type **persistence-ignorant** — no EF attributes.
+Two files, layered: the **entity** in `Shared.Domain` (this skill), the **mapping** in `Shared.Persistence` (delegated to the `add-entity-config` skill). Both services share these through the common kernel. Keep the domain type **persistence-ignorant** — no EF attributes, no Fluent API on the entity.
+
+## Default: relationships are two-way
+
+**Unless the user explicitly says otherwise, every foreign key gets a two-way navigation.** The dependent entity exposes a reference nav (`virtual <Owner>`), the principal exposes a collection nav (`virtual ICollection<Child>`), and `add-entity-config` maps **both** sides over the same FK. Do not produce a one-directional relationship unless asked.
 
 ## 1. Entity — `Src/Shared/Shared.Domain/Entities/<Name>.cs`
 
@@ -13,9 +17,9 @@ Two files, layered: the entity in `Shared.Domain`, the mapping in `Shared.Persis
 - **Private setters** on every property.
 - Mutate only through a static `Create` factory and instance `Update` methods.
 - Validate inputs with the shared guard clauses (`Guard.Against.ValidString(...)`, `using Ardalis.GuardClauses;` + `using Domain.Extensions;`). Put each validation in a `private static` helper so `Create` and `Update` share it.
-- Foreign keys: a `long <Owner>Id` plus a `virtual <Owner>` nav property (model on `User`). **Always** make the relationship two-way — also add the matching collection nav on the owner and map both sides (see section 3).
+- **Foreign keys:** a `long <Owner>Id` plus a `virtual <Owner>` nav property — **and** add the matching collection nav on the owner entity (see section 2). Model on `Shared.Domain/Entities/World.cs` ↔ `User`.
 
-Template (model on `Shared.Domain/Entities/User.cs`):
+Template:
 
 ```csharp
 using Ardalis.GuardClauses;
@@ -75,88 +79,47 @@ private static string? ValidDescription(string? description)
 }
 ```
 
-In the config, leave the property without `.IsRequired()` so the column is nullable (just set `.HasMaxLength(...)`).
+(In the config, leave the property without `.IsRequired()` so the column is nullable.)
 
-## 2. Configuration — `Src/Shared/Shared.Persistence/Configuration/<Name>Config.cs`
-
-- Implement `IEntityTypeConfiguration<T>` as an `internal sealed` class. **No `DbSet` and no manual registration** — `CoreContext.OnModelCreating` runs `ApplyConfigurationsFromAssembly` over the `Shared.Persistence` assembly, so any config placed here is discovered automatically. (A config placed anywhere else — e.g. `WebApi.infrastructure` — would silently never be applied.)
-- Map the table with `ToTable(nameof(<Name>), SchemaConstants.Default)` (`using Shared.Persistence.Constants;`).
-- `HasKey(x => x.Id)` and `Property(x => x.Id).ValueGeneratedOnAdd()`.
-- Set `HasMaxLength` / `IsRequired` to match the entity's guard limits; configure relationships with `HasOne/WithMany/HasForeignKey`.
-
-Template (model on `Shared.Persistence/Configuration/UserConfig.cs`):
-
-```csharp
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Shared.Domain.Entities;
-using Shared.Persistence.Constants;
-
-namespace Shared.Persistence.Configuration;
-
-internal sealed class TransactionConfig : IEntityTypeConfiguration<Transaction>
-{
-    public void Configure(EntityTypeBuilder<Transaction> entity)
-    {
-        entity.ToTable(nameof(Transaction), SchemaConstants.Default);
-
-        entity.HasKey(x => x.Id);
-
-        entity.Property(x => x.Id)
-            .ValueGeneratedOnAdd();
-
-        entity.Property(x => x.Description)
-            .HasMaxLength(256)
-            .IsRequired();
-
-        entity.HasOne(x => x.User)
-            .WithMany(x => x.Transactions)
-            .HasForeignKey(x => x.UserId);
-    }
-}
-```
-
-### Indexing a searchable column
-
-If a string column will be filtered with `ILIKE '%term%'` (see `add-search`), add a **GIN + pg_trgm** index so the search is index-backed rather than a sequential scan. The `pg_trgm` extension is already enabled in `CoreContext.OnModelCreating`:
-
-```csharp
-entity.HasIndex(x => x.Name)
-    .HasMethod("gin")
-    .HasOperators("gin_trgm_ops");
-```
-
-For full-text search instead, map a generated `tsvector` column (`HasGeneratedTsVectorColumn`) with its own GIN index. Either way, create a migration after the change.
-
-## 3. Two-way navigation (always)
-
-Every FK relationship is mapped **two-way** — the owner exposes its children and both configs map the same FK explicitly.
+## 2. Add the two-way navigation on the owner
 
 On the **owner** entity (e.g. `Shared.Domain/Entities/User.cs`), add a collection nav with a private setter, initialised so it's never null:
 
 ```csharp
-public virtual ICollection<World> Worlds { get; private set; } = [];
+public virtual ICollection<Transaction> Transactions { get; private set; } = [];
 ```
 
-Then point both configs at the same FK:
+`add-entity-config` then maps both `HasOne/WithMany` (child config) and `HasMany/WithOne` (owner config) over the same FK. Both halves — the collection nav here and the two mappings — always travel together.
+
+## 3. Join / link entities (many-to-many with a role or payload)
+
+For an entity that links two others (e.g. `CampaignMember` linking `Campaign` and `User` with a `Role`):
+
+- Inherit the **non-generic `Entity`** (not `Entity<long>`) when the pair is the natural key — this keeps `DateCreated` but drops the surrogate `Id`. The config keys it on the pair (`HasKey(x => new { x.CampaignId, x.UserId })`).
+- Hold both FK ids + both reference navs (`virtual Campaign`, `virtual User`); add the matching collection nav on **each** owner (`Campaign.Members`, `User.CampaignMemberships`).
+- The `Create` factory can enforce invariants (e.g. an aggregate root's `Create` adds the first link to its collection so EF cascade-inserts it).
 
 ```csharp
-// child config (WorldConfig)
-entity.HasOne(x => x.User)
-    .WithMany(x => x.Worlds)
-    .HasForeignKey(x => x.UserId);
+public class CampaignMember : Entity
+{
+    public long CampaignId { get; private set; }
+    public virtual Campaign Campaign { get; private set; } = null!;
+    public long UserId { get; private set; }
+    public virtual User User { get; private set; } = null!;
+    public CampaignRole Role { get; private set; }
 
-// owner config (UserConfig) — same FK, owning side
-entity.HasMany(x => x.Worlds)
-    .WithOne(x => x.User)
-    .HasForeignKey(x => x.UserId);
+    public static CampaignMember Create(long userId, CampaignRole role) =>
+        new() { UserId = userId, Role = role };
+}
 ```
 
-Both sides describe the same `World.UserId` FK; EF merges them into one relationship.
+## 4. Create the EF configuration
+
+Use the **`add-entity-config`** skill to scaffold `Src/Shared/Shared.Persistence/Configuration/<Name>Config.cs` (table, key(s), column constraints, the two-way relationship mappings, composite keys, and any indexes). Don't hand-roll the mapping here — that skill carries the current conventions.
 
 ## After scaffolding
 
-- **Add a migration** — it auto-applies on next startup (`app.ApplyDatabaseMigrationsAsync()` in `Program.cs`). See `Docs/EfMigrations.md`; migrations assembly is `Shared.Persistence`, startup project `WebApi.Presentation`. The `dotnet ef` command logs a benign `Sensitive data logging is enabled` warning in Development — it does not mean the migration failed.
+- **Add a migration** with the `add-migration` skill — it auto-applies on next WebApi startup (`app.ApplyDatabaseMigrationsAsync()`).
 - `dotnet build` — warnings are errors.
 
 Next steps are usually: `add-secured-repo` (row-level security), then `add-feature` + `add-endpoint`.

@@ -3,6 +3,7 @@ using BlobStorage;
 using Caching;
 using WebApi.Application;
 using WebApi.infrastructure;
+using WebApi.Presentation.Common.ExceptionHandling;
 
 namespace WebApi.Presentation.Common.DIExtensions;
 
@@ -14,6 +15,9 @@ public static class ServiceCollectionExtensions
 
         services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        services.AddProblemDetails();
+        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
 
         services.AddApiDocumentation();
         services.AddJwtAuthentication(configuration);

@@ -17,7 +17,7 @@ internal sealed class GetWorldByIdQueryHandler(ISecuredQueryRepo queryRepo)
 
         if (world is null)
         {
-            return Result.NotFound();
+            return Result.NotFound($"World '{request.Id}' was not found or is not owned by the current user.");
         }
 
         return world;

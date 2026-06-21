@@ -17,6 +17,8 @@ Custom CQRS via `CQRS.Core` (not MediatR). One folder per feature under `Src/Ser
 
 Requests are `public sealed record`. Handlers are `internal sealed class`. Use `Ardalis.Result` — `Result.NotFound()`, `Result.Success()`, or return the value directly (implicit conversion to `Result<T>`).
 
+**Give failure results a descriptive message** (the convention across the codebase): pass a sentence to `Result.NotFound(...)` / `Result.Forbidden(...)` naming the resource and why it failed — e.g. `Result.NotFound($"Campaign '{request.Id}' was not found or the current user is not a member of it.")`. The message surfaces to the client through `ToMinimalApiResult` (see `add-endpoint`). Reserve bare `Result.NotFound()` for cases with nothing useful to add.
+
 ## Repositories to inject
 
 - Reads: `ISecuredQueryRepo` (row-level filtered to the current user) — `WebApi.Application.Repositories.QueryRepos.SecuredRepos`. Its queryables (e.g. `queryRepo.Transactions`) are already user-scoped.
@@ -55,7 +57,9 @@ internal sealed class GetTransactionByIdQueryHandler(ISecuredQueryRepo queryRepo
             .Select(x => new GetTransactionByIdResponse(x.Id, x.Description, x.Amount, x.DateCreated))
             .FirstOrDefaultAsync(cancellationToken);
 
-        return item is null ? Result.NotFound() : item;
+        return item is null
+            ? Result.NotFound($"Transaction '{request.Id}' was not found or is not owned by the current user.")
+            : item;
     }
 }
 ```
@@ -76,7 +80,7 @@ internal sealed class CreateTransactionCommandHandler(
 }
 ```
 
-**Update/Delete** (`ICommand` → `Result`): load via `queryRepo.<X>.FirstOrDefaultAsync(...)` → `Result.NotFound()` if null → mutate via the entity's `Update(...)` then `UpdateAsync(...)` (or `DeleteAsync(...)`), `persistImmediately: true` → `Result.Success()`.
+**Update/Delete** (`ICommand` → `Result`): load via `queryRepo.<X>.FirstOrDefaultAsync(...)` → descriptive `Result.NotFound(...)` if null → mutate via the entity's `Update(...)` then `UpdateAsync(...)` (or `DeleteAsync(...)`), `persistImmediately: true` → `Result.Success()`. When write access is narrower than read access (e.g. role-gated edits), let the entity's `Lock.HasAccess` reject the write — it becomes a 403 via the global handler (see `add-secured-repo`) — rather than re-checking in the handler.
 
 ## List, paginated, and searchable features
 

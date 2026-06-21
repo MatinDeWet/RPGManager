@@ -13,4 +13,6 @@ internal sealed class SecuredQueryRepo(CoreContext context, IIdentityInfo info, 
     public IQueryable<User> Users => GetQueryable<User>();
 
     public IQueryable<World> Worlds => GetQueryable<World>();
+
+    public IQueryable<Campaign> Campaigns => GetQueryable<Campaign>();
 }
