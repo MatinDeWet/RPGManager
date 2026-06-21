@@ -78,15 +78,14 @@ internal sealed class CreateTransactionCommandHandler(
 
 **Update/Delete** (`ICommand` → `Result`): load via `queryRepo.<X>.FirstOrDefaultAsync(...)` → `Result.NotFound()` if null → mutate via the entity's `Update(...)` then `UpdateAsync(...)` (or `DeleteAsync(...)`), `persistImmediately: true` → `Result.Success()`.
 
-## Paginated search (MatinDeWet.Pagination)
+## List, paginated, and searchable features
 
-For a list/search feature returning a page:
+This skill covers the base query/command shape. For list features, compose the dedicated skills:
 
-- Query: `public sealed class SearchTransactionsQuery : PageableRequest, IQuery<PageableResponse<SearchTransactionsResponse>>;` (`Pagination.Models.Requests` / `.Responses`).
-- Response: a record with **`init` properties** (NOT a positional/constructor record).
-- Handler: project with a **member-init** `Select(x => new SearchTransactionsResponse { Id = x.Id, ... })` then `await query.ToPageableListAsync(x => x.Id, request, cancellationToken)` (`using Pagination;`). The fallback key selector orders when `OrderBy` is null.
+- **`add-pagination`** — return a page of results (`PageableRequest` query, member-init DTO, `ToPageableListAsync`, `[AsParameters]` endpoint binding).
+- **`add-search`** — add free-text filtering (`ISearchableRequest` on the query, `ILikeSearch`/`FullTextSearch`, backing trigram/tsvector index).
 
-> Critical: EF Core cannot translate ordering applied **after a constructor projection**. The pagination helper always orders, so search DTOs must use member-init. Single-item queries (no post-projection ordering) may use constructor records.
+The two compose: a paged, name-filtered list uses both (one query implements `PageableRequest` *and* `ISearchableRequest`).
 
 ## After scaffolding
 
