@@ -16,8 +16,10 @@ public static class ServiceCollectionExtensions
         services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-        services.AddProblemDetails();
-        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
+        services.AddProblemDetails(options => options.CustomizeProblemDetails = ProblemDetailsEnricher.Enrich);
+        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>(); // 403, specific
+        services.AddExceptionHandler<ValidationExceptionHandler>();          // 400, specific
+        services.AddExceptionHandler<GlobalExceptionHandler>();              // 500, catch-all (last)
 
         services.AddApiDocumentation();
         services.AddJwtAuthentication(configuration);
