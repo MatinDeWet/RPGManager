@@ -20,6 +20,10 @@ internal sealed class WorldConfig : IEntityTypeConfiguration<World>
             .HasMaxLength(128)
             .IsRequired();
 
+        entity.HasIndex(x => x.Name)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+
         entity.Property(x => x.Description)
             .HasMaxLength(4096);
 
