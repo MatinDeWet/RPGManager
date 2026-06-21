@@ -116,6 +116,18 @@ internal sealed class TransactionConfig : IEntityTypeConfiguration<Transaction>
 }
 ```
 
+### Indexing a searchable column
+
+If a string column will be filtered with `ILIKE '%term%'` (see `add-search`), add a **GIN + pg_trgm** index so the search is index-backed rather than a sequential scan. The `pg_trgm` extension is already enabled in `CoreContext.OnModelCreating`:
+
+```csharp
+entity.HasIndex(x => x.Name)
+    .HasMethod("gin")
+    .HasOperators("gin_trgm_ops");
+```
+
+For full-text search instead, map a generated `tsvector` column (`HasGeneratedTsVectorColumn`) with its own GIN index. Either way, create a migration after the change.
+
 ## 3. Two-way navigation (always)
 
 Every FK relationship is mapped **two-way** — the owner exposes its children and both configs map the same FK explicitly.

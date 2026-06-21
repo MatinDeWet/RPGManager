@@ -1,6 +1,7 @@
 using Ardalis.Result;
 using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.UserFeatures.GetUser;
 
 namespace WebApi.Presentation.Endpoints.UserEndpoints;
@@ -17,7 +18,7 @@ internal static class GetUserEndpoint
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> GetCurrentUser(
-        IQueryManager<GetUserQuery, GetUserResponse> handler,
+        [FromServices] IQueryManager<GetUserQuery, GetUserResponse> handler,
         CancellationToken cancellationToken)
     {
         Result<GetUserResponse> result = await handler.Handle(new GetUserQuery(), cancellationToken);

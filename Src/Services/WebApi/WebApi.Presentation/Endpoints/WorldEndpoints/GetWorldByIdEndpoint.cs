@@ -19,7 +19,7 @@ internal static class GetWorldByIdEndpoint
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> GetWorldById(
         [FromRoute] long id,
-        IQueryManager<GetWorldByIdQuery, GetWorldByIdResponse> handler,
+        [FromServices] IQueryManager<GetWorldByIdQuery, GetWorldByIdResponse> handler,
         CancellationToken cancellationToken)
     {
         Result<GetWorldByIdResponse> result = await handler.Handle(new GetWorldByIdQuery(id), cancellationToken);

@@ -20,7 +20,7 @@ internal static class UpdateWorldEndpoint
     private static async Task<Microsoft.AspNetCore.Http.IResult> UpdateWorld(
         [FromRoute] long id,
         [FromBody] UpdateWorldRequest request,
-        ICommandManager<UpdateWorldCommand> handler,
+        [FromServices] ICommandManager<UpdateWorldCommand> handler,
         CancellationToken cancellationToken)
     {
         UpdateWorldCommand command = new(id, request.Name, request.Description);

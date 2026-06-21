@@ -19,7 +19,7 @@ internal static class DeleteWorldEndpoint
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> DeleteWorld(
         [FromRoute] long id,
-        ICommandManager<DeleteWorldCommand> handler,
+        [FromServices] ICommandManager<DeleteWorldCommand> handler,
         CancellationToken cancellationToken)
     {
         Result result = await handler.Handle(new DeleteWorldCommand(id), cancellationToken);
