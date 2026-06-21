@@ -17,9 +17,13 @@ internal sealed class CampaignLock(CoreContext context) : Lock<Campaign>
 {
     public override IQueryable<Campaign> Secured(long userId)
     {
-        return from campaign in context.Set<Campaign>()
-               where context.Set<CampaignMember>()
-                   .Any(member => member.CampaignId == campaign.Id && member.UserId == userId)
+        // Driven from the membership side so the planner uses IX_CampaignMember_UserId to resolve the
+        // (typically small) set of campaigns the user belongs to. The unique (CampaignId, UserId) key
+        // guarantees one membership row per campaign, so the join yields no duplicate campaigns.
+        return from member in context.Set<CampaignMember>()
+               join campaign in context.Set<Campaign>()
+                   on member.CampaignId equals campaign.Id
+               where member.UserId == userId
                select campaign;
     }
 
@@ -32,14 +36,16 @@ internal sealed class CampaignLock(CoreContext context) : Lock<Campaign>
             return true;
         }
 
-        // Mutating operations require the Dungeon Master role; reads only require membership.
-        bool requiresDungeonMaster = operation is RepositoryOperationEnum.Update or RepositoryOperationEnum.Delete;
+        // Resolved by the composite (CampaignId, UserId) primary key.
+        IQueryable<CampaignMember> membership = context.Set<CampaignMember>()
+            .Where(member => member.CampaignId == obj.Id && member.UserId == userId);
 
-        return await context.Set<CampaignMember>()
-            .AnyAsync(
-                member => member.CampaignId == obj.Id
-                    && member.UserId == userId
-                    && (!requiresDungeonMaster || member.Role == CampaignRole.DungeonMaster),
-                cancellationToken);
+        // Mutating operations require the Dungeon Master role; reads only require membership.
+        if (operation is RepositoryOperationEnum.Update or RepositoryOperationEnum.Delete)
+        {
+            membership = membership.Where(member => member.Role == CampaignRole.DungeonMaster);
+        }
+
+        return await membership.AnyAsync(cancellationToken);
     }
 }
