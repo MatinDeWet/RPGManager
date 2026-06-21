@@ -26,5 +26,9 @@ internal sealed class UserConfig : IEntityTypeConfiguration<User>
         entity.HasMany(x => x.Worlds)
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId);
+
+        entity.HasMany(x => x.CampaignMemberships)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId);
     }
 }

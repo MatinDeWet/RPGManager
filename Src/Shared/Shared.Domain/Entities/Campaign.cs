@@ -1,29 +1,35 @@
 using Ardalis.GuardClauses;
 using Domain.Extensions;
 using Domain.Implementation;
+using Shared.Domain.Enums;
 
 namespace Shared.Domain.Entities;
 
-public class World : Entity<long>
+public class Campaign : Entity<long>
 {
-    public long UserId { get; private set; }
+    public long WorldId { get; private set; }
 
-    public virtual User User { get; private set; } = null!;
+    public virtual World World { get; private set; } = null!;
 
     public string Name { get; private set; }
 
     public string? Description { get; private set; }
 
-    public virtual ICollection<Campaign> Campaigns { get; private set; } = [];
+    public virtual ICollection<CampaignMember> Members { get; private set; } = [];
 
-    public static World Create(long userId, string name, string? description)
+    public static Campaign Create(long worldId, long creatorUserId, string name, string? description)
     {
-        return new World
+        var campaign = new Campaign
         {
-            UserId = userId,
+            WorldId = worldId,
             Name = ValidName(name),
             Description = ValidDescription(description),
         };
+
+        // The creator is always enrolled as the campaign's first Dungeon Master.
+        campaign.Members.Add(CampaignMember.Create(creatorUserId, CampaignRole.DungeonMaster));
+
+        return campaign;
     }
 
     public void Update(string name, string? description)

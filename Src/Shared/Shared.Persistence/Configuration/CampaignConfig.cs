@@ -5,11 +5,11 @@ using Shared.Persistence.Constants;
 
 namespace Shared.Persistence.Configuration;
 
-internal sealed class WorldConfig : IEntityTypeConfiguration<World>
+internal sealed class CampaignConfig : IEntityTypeConfiguration<Campaign>
 {
-    public void Configure(EntityTypeBuilder<World> entity)
+    public void Configure(EntityTypeBuilder<Campaign> entity)
     {
-        entity.ToTable(nameof(World), SchemaConstants.Default);
+        entity.ToTable(nameof(Campaign), SchemaConstants.Default);
 
         entity.HasKey(x => x.Id);
 
@@ -27,12 +27,12 @@ internal sealed class WorldConfig : IEntityTypeConfiguration<World>
         entity.Property(x => x.Description)
             .HasMaxLength(4096);
 
-        entity.HasOne(x => x.User)
-            .WithMany(x => x.Worlds)
-            .HasForeignKey(x => x.UserId);
-
-        entity.HasMany(x => x.Campaigns)
-            .WithOne(x => x.World)
+        entity.HasOne(x => x.World)
+            .WithMany(x => x.Campaigns)
             .HasForeignKey(x => x.WorldId);
+
+        entity.HasMany(x => x.Members)
+            .WithOne(x => x.Campaign)
+            .HasForeignKey(x => x.CampaignId);
     }
 }

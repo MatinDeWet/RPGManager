@@ -10,6 +10,8 @@ public class User : Entity<long>
 
     public virtual ICollection<World> Worlds { get; private set; } = [];
 
+    public virtual ICollection<CampaignMember> CampaignMemberships { get; private set; } = [];
+
     public static User Create(string identityId)
     {
         return new User
