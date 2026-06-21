@@ -18,7 +18,7 @@ public class CoreContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Trigram extension backing the case-insensitive ILIKE '%...%' searches (e.g. travel-history file names).
+        // Trigram extension backing case-insensitive ILIKE '%...%' substring searches.
         modelBuilder.HasPostgresExtension("pg_trgm");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CoreContext).Assembly);
