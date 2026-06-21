@@ -16,7 +16,7 @@ internal sealed class GetUserQueryHandler(ISecuredQueryRepo queryRepo)
 
         if (user is null)
         {
-            return Result.NotFound();
+            return Result.NotFound("The current user was not found.");
         }
 
         return user;
