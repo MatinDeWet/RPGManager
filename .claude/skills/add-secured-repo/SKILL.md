@@ -11,13 +11,13 @@ The current user's internal id comes from `IIdentityInfo.GetInternalUserId()` (a
 
 ## 1. Lock — `Src/Services/WebApi/WebApi.infrastructure/Repositories/Locks/<Name>Lock.cs`
 
-Auto-registers via `AddSecuredRepositories` (Scrutor scans `IProtected`) — no manual DI. Model on `UserLock.cs` / `CardLock.cs`.
+Auto-registers via `AddSecuredRepositories` (Scrutor scans `IProtected`) — no manual DI. Model on `UserLock.cs`.
 
 ```csharp
 using Repository.Enums;
 using Repository.Lock;
-using WebApi.Domain.Entities;
-using WebApi.infrastructure.Data.Contexts;
+using Shared.Domain.Entities;
+using Shared.Persistence.Data.Contexts;
 
 namespace WebApi.infrastructure.Repositories.Locks;
 
@@ -49,7 +49,7 @@ internal sealed class TransactionLock(CoreContext context) : Lock<Transaction>
 
 ## 3. Lock unit tests (match existing coverage)
 
-The repo tests every lock — mirror `UserLockTests`/`CardLockTests`.
+The repo tests every lock — mirror `UserLockTests`.
 
 - Test double — `Tests/Services/WebApi/WebApi.infrastructure.UnitTests/TestDoubles/Test<Name>.cs`: build instances and set the DB-generated `Id` via reflection (see `TestCard`).
 - Tests — `.../Repositories/Locks/<Name>LockTests.cs`: cover `Secured` (returns only owned rows / empty when none), `HasAccess` true/false across all `RepositoryOperationEnum` values (`[Theory]`/`[InlineData]`), and `IsMatch` for the type and an unrelated type. Uses `MockQueryable.NSubstitute` (`BuildMockDbSet()`), `NSubstitute`, `Shouldly`, `xunit.v3` (`TestContext.Current.CancellationToken`).

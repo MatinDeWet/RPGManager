@@ -18,7 +18,7 @@ protected — **never commit directly to them**; all changes land via pull reque
 | `release/*` | `develop`  | `main` **and** `develop` | Stabilising a release (version bump, final fixes) |
 | `hotfix/*`  | `main`     | `main` **and** `develop` | Urgent production fixes                 |
 
-Name branches descriptively, e.g. `feature/card-search`, `hotfix/null-user-id`.
+Name branches descriptively, e.g. `feature/user-search`, `hotfix/null-user-id`.
 
 ## Everyday workflow (features)
 
