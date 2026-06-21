@@ -21,7 +21,7 @@ internal static class SearchWorldsEndpoint
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> SearchWorlds(
         [AsParameters] SearchWorldsRequest request,
-        IQueryManager<SearchWorldsQuery, PageableResponse<SearchWorldsResponse>> handler,
+        [FromServices] IQueryManager<SearchWorldsQuery, PageableResponse<SearchWorldsResponse>> handler,
         CancellationToken cancellationToken)
     {
         SearchWorldsQuery query = new()

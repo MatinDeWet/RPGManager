@@ -19,7 +19,7 @@ internal static class CreateWorldEndpoint
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> CreateWorld(
         [FromBody] CreateWorldCommand command,
-        ICommandManager<CreateWorldCommand, CreateWorldResponse> handler,
+        [FromServices] ICommandManager<CreateWorldCommand, CreateWorldResponse> handler,
         CancellationToken cancellationToken)
     {
         Result<CreateWorldResponse> result = await handler.Handle(command, cancellationToken);
