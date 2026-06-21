@@ -9,6 +9,8 @@ builder.Services.AddApplicationServices(builder.Configuration, builder.Environme
 
 WebApplication app = builder.Build();
 
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())

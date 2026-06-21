@@ -12,4 +12,6 @@ public interface ISecuredQueryRepo : ISecureQueryRepo
     IQueryable<User> Users { get; }
 
     IQueryable<World> Worlds { get; }
+
+    IQueryable<Campaign> Campaigns { get; }
 }
