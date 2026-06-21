@@ -92,5 +92,6 @@ Add `app.Map<Entity>Endpoints();` alongside `app.MapUserEndpoints();` / `app.Map
 
 ## Notes
 
+- `ToMinimalApiResult()` maps the `Ardalis.Result` status to HTTP (200/201, 400, 404, 403, …) and carries the handler's descriptive `Result.NotFound(...)`/`Result.Forbidden(...)` messages into the response — so set good messages in the handler (see `add-feature`), not at the endpoint. A non-`Result` failure like an `UnauthorizedAccessException` thrown by a secured write is turned into a 403 by the global exception handler (see `add-secured-repo`).
 - Enums serialize as text app-wide via `JsonStringEnumConverter` (registered in `ServiceCollectionExtensions`); new enums get string values + Swagger dropdowns for free. Restart + hard-refresh Swagger to pick up schema changes (it caches `/openapi/v1.json`).
 - `dotnet build` — warnings are errors.

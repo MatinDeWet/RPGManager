@@ -112,6 +112,5 @@ For a `string?` (or otherwise optional) property, **omit `.IsRequired()`** so th
 
 ## After scaffolding
 
-- **Add a migration** — it auto-applies on next startup (`app.ApplyDatabaseMigrationsAsync()`). Migrations assembly is `Shared.Persistence`, startup project `WebApi.Presentation`; see `Docs/EfMigrations.md`. The `dotnet ef` command logs a benign `Sensitive data logging is enabled` warning in Development.
-- After a navigation-only change (adding the inverse side, no new column/key), run `dotnet ef migrations has-pending-model-changes` — it should report no changes, confirming the schema is unaffected.
+- **Add a migration** with the `add-migration` skill (it also covers the remove+re-add iteration loop and, for navigation-only changes, the `has-pending-model-changes` check that confirms no migration is needed).
 - `dotnet build` — warnings are errors.

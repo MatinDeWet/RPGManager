@@ -119,7 +119,7 @@ Use the **`add-entity-config`** skill to scaffold `Src/Shared/Shared.Persistence
 
 ## After scaffolding
 
-- **Add a migration** — it auto-applies on next startup (`app.ApplyDatabaseMigrationsAsync()` in `Program.cs`). See `Docs/EfMigrations.md`; migrations assembly is `Shared.Persistence`, startup project `WebApi.Presentation`. The `dotnet ef` command logs a benign `Sensitive data logging is enabled` warning in Development — it does not mean the migration failed.
+- **Add a migration** with the `add-migration` skill — it auto-applies on next WebApi startup (`app.ApplyDatabaseMigrationsAsync()`).
 - `dotnet build` — warnings are errors.
 
 Next steps are usually: `add-secured-repo` (row-level security), then `add-feature` + `add-endpoint`.
