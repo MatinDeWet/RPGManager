@@ -13,7 +13,7 @@ Two files, layered: the entity in `Shared.Domain`, the mapping in `Shared.Persis
 - **Private setters** on every property.
 - Mutate only through a static `Create` factory and instance `Update` methods.
 - Validate inputs with the shared guard clauses (`Guard.Against.ValidString(...)`, `using Ardalis.GuardClauses;` + `using Domain.Extensions;`). Put each validation in a `private static` helper so `Create` and `Update` share it.
-- Foreign keys: a `long <Owner>Id` plus a `virtual <Owner>` nav property (model on `User`).
+- Foreign keys: a `long <Owner>Id` plus a `virtual <Owner>` nav property (model on `User`). **Always** make the relationship two-way — also add the matching collection nav on the owner and map both sides (see section 3).
 
 Template (model on `Shared.Domain/Entities/User.cs`):
 
@@ -57,6 +57,26 @@ public class Transaction : Entity<long>
 }
 ```
 
+### Optional (nullable) string values
+
+For a **nullable** column, type the property `string?` and short-circuit `null` in the helper. Do **not** rely on `ValidString(..., allowNullOrWhiteSpace: true)` — it coerces `null`/blank into `string.Empty`, which writes `""` to the DB instead of `NULL`. Validate the max length only when a value is actually present:
+
+```csharp
+public string? Description { get; private set; }
+
+private static string? ValidDescription(string? description)
+{
+    if (string.IsNullOrWhiteSpace(description))
+    {
+        return null;
+    }
+
+    return Guard.Against.ValidString(description, nameof(description), maxLength: 4096);
+}
+```
+
+In the config, leave the property without `.IsRequired()` so the column is nullable (just set `.HasMaxLength(...)`).
+
 ## 2. Configuration — `Src/Shared/Shared.Persistence/Configuration/<Name>Config.cs`
 
 - Implement `IEntityTypeConfiguration<T>` as an `internal sealed` class. **No `DbSet` and no manual registration** — `CoreContext.OnModelCreating` runs `ApplyConfigurationsFromAssembly` over the `Shared.Persistence` assembly, so any config placed here is discovered automatically. (A config placed anywhere else — e.g. `WebApi.infrastructure` — would silently never be applied.)
@@ -90,16 +110,41 @@ internal sealed class TransactionConfig : IEntityTypeConfiguration<Transaction>
             .IsRequired();
 
         entity.HasOne(x => x.User)
-            .WithMany()
+            .WithMany(x => x.Transactions)
             .HasForeignKey(x => x.UserId);
     }
 }
 ```
 
+## 3. Two-way navigation (always)
+
+Every FK relationship is mapped **two-way** — the owner exposes its children and both configs map the same FK explicitly.
+
+On the **owner** entity (e.g. `Shared.Domain/Entities/User.cs`), add a collection nav with a private setter, initialised so it's never null:
+
+```csharp
+public virtual ICollection<World> Worlds { get; private set; } = [];
+```
+
+Then point both configs at the same FK:
+
+```csharp
+// child config (WorldConfig)
+entity.HasOne(x => x.User)
+    .WithMany(x => x.Worlds)
+    .HasForeignKey(x => x.UserId);
+
+// owner config (UserConfig) — same FK, owning side
+entity.HasMany(x => x.Worlds)
+    .WithOne(x => x.User)
+    .HasForeignKey(x => x.UserId);
+```
+
+Both sides describe the same `World.UserId` FK; EF merges them into one relationship.
+
 ## After scaffolding
 
-- If the owning side needs a collection nav (e.g. `User.Transactions`), add it to that entity and wire `WithMany(x => x.<Collection>)`.
-- **Add a migration** — it auto-applies on next startup (`app.ApplyDatabaseMigrationsAsync()` in `Program.cs`). See `Docs/EfMigrations.md`; migrations assembly is `Shared.Persistence`, startup project `WebApi.Presentation`.
+- **Add a migration** — it auto-applies on next startup (`app.ApplyDatabaseMigrationsAsync()` in `Program.cs`). See `Docs/EfMigrations.md`; migrations assembly is `Shared.Persistence`, startup project `WebApi.Presentation`. The `dotnet ef` command logs a benign `Sensitive data logging is enabled` warning in Development — it does not mean the migration failed.
 - `dotnet build` — warnings are errors.
 
 Next steps are usually: `add-secured-repo` (row-level security), then `add-feature` + `add-endpoint`.

@@ -22,5 +22,9 @@ internal sealed class UserConfig : IEntityTypeConfiguration<User>
 
         entity.HasIndex(x => x.IdentityId)
             .IsUnique();
+
+        entity.HasMany(x => x.Worlds)
+            .WithOne(x => x.User)
+            .HasForeignKey(x => x.UserId);
     }
 }

@@ -10,4 +10,6 @@ namespace WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 public interface ISecuredQueryRepo : ISecureQueryRepo
 {
     IQueryable<User> Users { get; }
+
+    IQueryable<World> Worlds { get; }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shared.Persistence.Data.Contexts;
@@ -11,9 +12,11 @@ using Shared.Persistence.Data.Contexts;
 namespace Shared.Persistence.Data.Migrations.CoreMigrations
 {
     [DbContext(typeof(CoreContext))]
-    partial class CoreContextModelSnapshot : ModelSnapshot
+    [Migration("20260621132300_AddWorld")]
+    partial class AddWorld
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,11 +74,6 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("UserId");
 
