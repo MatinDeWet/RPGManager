@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # .NET / NuGet — versions are centrally managed in Directory.Packages.props
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      nuget-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions used in workflows (kept SHA-pinned)
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  # Docker base images (API Dockerfile + compose)
+  - package-ecosystem: docker
+    directory: "/Src/Services/WebApi/WebApi.Presentation"
+    schedule:
+      interval: weekly

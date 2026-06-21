@@ -1,0 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Shared.Domain.Entities;
+using Shared.Persistence.Constants;
+
+namespace Shared.Persistence.Configuration;
+
+internal sealed class UserConfig : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> entity)
+    {
+        entity.ToTable(nameof(User), SchemaConstants.Default);
+        
+        entity.HasKey(x => x.Id);
+        
+        entity.Property(x => x.Id)
+            .ValueGeneratedOnAdd();
+
+        entity.Property(x => x.IdentityId)
+            .HasMaxLength(256)
+            .IsRequired();
+
+        entity.HasIndex(x => x.IdentityId)
+            .IsUnique();
+    }
+}

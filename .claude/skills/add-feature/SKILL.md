@@ -1,0 +1,93 @@
+---
+name: add-feature
+description: Scaffold one CQRS feature (a query or a command) in the RPGManager WebApi Application layer. Use when adding a single use case (e.g. "add a GetTransactionById query" or "add a CreateTransaction command"). Creates the request record, the internal sealed handler returning Ardalis.Result, and the response record — auto-registered by Scrutor, no manual DI.
+---
+
+# Add a CQRS feature
+
+Custom CQRS via `CQRS.Core` (not MediatR). One folder per feature under `Src/Services/WebApi/WebApi.Application/Features/<Entity>Features/<FeatureName>/`, containing the request, handler, and (if any) response. Handlers are auto-registered by `AddCQRSSupport` (Scrutor) — never wire DI by hand.
+
+## Contracts (in `CQRS.Core.Contracts`)
+
+| Request | Handler | Returns |
+|---|---|---|
+| `IQuery<TResponse>` | `IQueryManager<TQuery, TResponse>` | `Task<Result<TResponse>>` |
+| `ICommand<TResponse>` | `ICommandManager<TCommand, TResponse>` | `Task<Result<TResponse>>` |
+| `ICommand` (no payload) | `ICommandManager<TCommand>` | `Task<Result>` |
+
+Requests are `public sealed record`. Handlers are `internal sealed class`. Use `Ardalis.Result` — `Result.NotFound()`, `Result.Success()`, or return the value directly (implicit conversion to `Result<T>`).
+
+## Repositories to inject
+
+- Reads: `ISecuredQueryRepo` (row-level filtered to the current user) — `WebApi.Application.Repositories.QueryRepos.SecuredRepos`. Its queryables (e.g. `queryRepo.Transactions`) are already user-scoped.
+- Writes: `ISecuredCommandRepo` (`WebApi.Application.Repositories.CommandRepos.SecuredRepos`) — `InsertAsync/UpdateAsync/DeleteAsync` (each with a `persistImmediately` overload) + `SaveAsync`. It runs the entity's `Lock.HasAccess` before staging.
+- Current user id: inject `IIdentityInfo` (`Identification.Contracts`) → `GetInternalUserId()`. Needed on Create to set the owner FK.
+- Pre-auth only: the `IUnsecured*` repos.
+
+## Templates
+
+**Query** (model on `UserFeatures/GetUser`):
+
+```csharp
+// GetTransactionByIdQuery.cs
+using CQRS.Core.Contracts;
+namespace WebApi.Application.Features.TransactionFeatures.GetTransactionById;
+public sealed record GetTransactionByIdQuery(long Id) : IQuery<GetTransactionByIdResponse>;
+
+// GetTransactionByIdResponse.cs
+namespace WebApi.Application.Features.TransactionFeatures.GetTransactionById;
+public sealed record GetTransactionByIdResponse(long Id, string Description, decimal Amount, DateTimeOffset DateCreated);
+
+// GetTransactionByIdQueryHandler.cs
+using Ardalis.Result;
+using CQRS.Core.Contracts;
+using Microsoft.EntityFrameworkCore;
+using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
+namespace WebApi.Application.Features.TransactionFeatures.GetTransactionById;
+
+internal sealed class GetTransactionByIdQueryHandler(ISecuredQueryRepo queryRepo)
+    : IQueryManager<GetTransactionByIdQuery, GetTransactionByIdResponse>
+{
+    public async Task<Result<GetTransactionByIdResponse>> Handle(GetTransactionByIdQuery request, CancellationToken cancellationToken)
+    {
+        GetTransactionByIdResponse? item = await queryRepo.Transactions
+            .Where(x => x.Id == request.Id)
+            .Select(x => new GetTransactionByIdResponse(x.Id, x.Description, x.Amount, x.DateCreated))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return item is null ? Result.NotFound() : item;
+    }
+}
+```
+
+**Create command** (sets owner from identity; `var` because the type is apparent — IDE0007):
+
+```csharp
+internal sealed class CreateTransactionCommandHandler(
+    ISecuredCommandRepo commandRepo,
+    IIdentityInfo identityInfo) : ICommandManager<CreateTransactionCommand, CreateTransactionResponse>
+{
+    public async Task<Result<CreateTransactionResponse>> Handle(CreateTransactionCommand request, CancellationToken cancellationToken)
+    {
+        var item = Transaction.Create(identityInfo.GetInternalUserId(), request.Description, request.Amount);
+        await commandRepo.InsertAsync(item, persistImmediately: true, cancellationToken);
+        return new CreateTransactionResponse(item.Id);
+    }
+}
+```
+
+**Update/Delete** (`ICommand` → `Result`): load via `queryRepo.<X>.FirstOrDefaultAsync(...)` → `Result.NotFound()` if null → mutate via the entity's `Update(...)` then `UpdateAsync(...)` (or `DeleteAsync(...)`), `persistImmediately: true` → `Result.Success()`.
+
+## Paginated search (MatinDeWet.Pagination)
+
+For a list/search feature returning a page:
+
+- Query: `public sealed class SearchTransactionsQuery : PageableRequest, IQuery<PageableResponse<SearchTransactionsResponse>>;` (`Pagination.Models.Requests` / `.Responses`).
+- Response: a record with **`init` properties** (NOT a positional/constructor record).
+- Handler: project with a **member-init** `Select(x => new SearchTransactionsResponse { Id = x.Id, ... })` then `await query.ToPageableListAsync(x => x.Id, request, cancellationToken)` (`using Pagination;`). The fallback key selector orders when `OrderBy` is null.
+
+> Critical: EF Core cannot translate ordering applied **after a constructor projection**. The pagination helper always orders, so search DTOs must use member-init. Single-item queries (no post-projection ordering) may use constructor records.
+
+## After scaffolding
+
+`dotnet build` (warnings-as-errors). Then expose it over HTTP with `add-endpoint`.

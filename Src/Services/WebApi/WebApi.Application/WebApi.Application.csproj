@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MatinDeWet.Pagination" />
+      <PackageReference Include="MatinDeWet.Searchable.PostgreSQL" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WebApi.Domain\WebApi.Domain.csproj" />
+      <ProjectReference Include="..\..\..\Integrations\BlobStorage.Integration\BlobStorage.Integration.csproj" />
+      <ProjectReference Include="..\..\..\Utilities\CQRS\CQRS.Core\CQRS.Core.csproj" />
+      <ProjectReference Include="..\..\..\Utilities\Repository\Repository.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Hangfire.Core" />
+        <PackageReference Include="Hangfire.NetCore" />
+        <PackageReference Include="Hangfire.PostgreSql" />
+        <!-- Force the patched Newtonsoft.Json over Hangfire.Core's vulnerable transitive 11.0.1 (NU1903). -->
+        <PackageReference Include="Newtonsoft.Json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Worker.Application\Worker.Application.csproj" />
+      <ProjectReference Include="..\..\..\Shared\Shared.Persistence\Shared.Persistence.csproj" />
+    </ItemGroup>
+
+</Project>

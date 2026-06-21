@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
+  <Folder Name="/Src/" />
+  <Folder Name="/Src/Services/" />
+  <Folder Name="/Src/Services/WebApi/">
+    <Project Path="Src/Services/WebApi/WebApi.Application/WebApi.Application.csproj" />
+    <Project Path="Src/Services/WebApi/WebApi.Domain/WebApi.Domain.csproj" />
+    <Project Path="Src/Services/WebApi/WebApi.infrastructure/WebApi.infrastructure.csproj" />
+    <Project Path="Src/Services/WebApi/WebApi.Presentation/WebApi.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Src/Shared/">
+    <Project Path="Src/Shared/Shared.Domain/Shared.Domain.csproj" />
+    <Project Path="Src/Shared/Shared.Persistence/Shared.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Src/Services/Worker/">
+    <Project Path="Src/Services/Worker/Worker.Domain/Worker.Domain.csproj" />
+    <Project Path="Src/Services/Worker/Worker.Application/Worker.Application.csproj" />
+    <Project Path="Src/Services/Worker/Worker.infrastructure/Worker.infrastructure.csproj" />
+    <Project Path="Src/Services/Worker/Worker.Presentation/Worker.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Src/Integrations/">
+    <Project Path="Src/Integrations/BlobStorage.Integration/BlobStorage.Integration.csproj" />
+  </Folder>
+  <Folder Name="/Src/Utilities/">
+    <Project Path="Src/Utilities/Caching/Caching.csproj" />
+    <Project Path="Src/Utilities/Domain/Domain.csproj" />
+    <Project Path="Src/Utilities/Identification/Identification.csproj" />
+    <Project Path="Src/Utilities/Repository/Repository.csproj" />
+  </Folder>
+  <Folder Name="/Src/Utilities/CQRS/">
+    <Project Path="Src/Utilities/CQRS/CQRS.Domain/CQRS.Domain.csproj" />
+    <Project Path="Src/Utilities/CQRS/CQRS.Core/CQRS.Core.csproj" />
+  </Folder>
+  <Folder Name="/Tests/" />
+  <Folder Name="/Tests/Services/" />
+  <Folder Name="/Tests/Services/WebApi/">
+    <Project Path="Tests/Services/WebApi/WebApi.infrastructure.UnitTests/WebApi.infrastructure.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Utilities/">
+    <Project Path="Tests/Utilities/Caching.UnitTests/Caching.UnitTests.csproj" />
+    <Project Path="Tests/Utilities/Identification.UnitTests/Identification.UnitTests.csproj" />
+    <Project Path="Tests/Utilities/CQRS.UnitTests/CQRS.UnitTests.csproj" />
+    <Project Path="Tests/Utilities/Repository.UnitTests/Repository.UnitTests.csproj" />
+  </Folder>
+</Solution>
