@@ -9,4 +9,10 @@ internal sealed class UnsecuredQueryRepo(CoreContext context)
     : QueryRepo<CoreContext>(context), IUnsecuredQueryRepo
 {
     public IQueryable<User> Users => GetQueryable<User>();
+
+    public IQueryable<Campaign> Campaigns => GetQueryable<Campaign>();
+
+    public IQueryable<CampaignMember> CampaignMembers => GetQueryable<CampaignMember>();
+
+    public IQueryable<CampaignInvitation> Invitations => GetQueryable<CampaignInvitation>();
 }

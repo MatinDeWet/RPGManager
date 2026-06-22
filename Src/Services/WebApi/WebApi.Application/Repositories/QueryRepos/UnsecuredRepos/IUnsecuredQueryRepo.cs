@@ -11,4 +11,10 @@ namespace WebApi.Application.Repositories.QueryRepos.UnsecuredRepos;
 public interface IUnsecuredQueryRepo : IQueryRepo
 {
     IQueryable<User> Users { get; }
+
+    IQueryable<Campaign> Campaigns { get; }
+
+    IQueryable<CampaignMember> CampaignMembers { get; }
+
+    IQueryable<CampaignInvitation> Invitations { get; }
 }

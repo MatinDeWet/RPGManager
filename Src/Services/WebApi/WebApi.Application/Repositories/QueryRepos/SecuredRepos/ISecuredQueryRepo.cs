@@ -14,4 +14,6 @@ public interface ISecuredQueryRepo : ISecureQueryRepo
     IQueryable<World> Worlds { get; }
 
     IQueryable<Campaign> Campaigns { get; }
+
+    IQueryable<CampaignInvitation> Invitations { get; }
 }
