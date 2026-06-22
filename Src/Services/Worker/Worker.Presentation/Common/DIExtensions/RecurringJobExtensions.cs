@@ -15,6 +15,7 @@ public static class RecurringJobExtensions
         IRecurringJobManager recurringJobs = host.Services.GetRequiredService<IRecurringJobManager>();
 
         recurringJobs.AddOrUpdate<IExampleJob>("example-job", job => job.RunAsync(CancellationToken.None), Cron.Hourly());
+        recurringJobs.AddOrUpdate<IPurgeInvitationsJob>("purge-invitations", job => job.RunAsync(CancellationToken.None), Cron.Daily());
 
         return host;
     }

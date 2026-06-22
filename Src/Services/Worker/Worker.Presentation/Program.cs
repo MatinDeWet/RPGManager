@@ -1,4 +1,5 @@
 using Worker.Application;
+using Worker.Application.Options;
 using Worker.infrastructure;
 using Worker.Presentation.Common.DIExtensions;
 
@@ -9,6 +10,8 @@ bool isDevelopmentOrStaging = builder.Environment.IsDevelopment() || builder.Env
 builder.Services.AddWorkerApplication();
 builder.Services.AddWorkerInfrastructure(builder.Configuration, isDevelopmentOrStaging);
 builder.Services.AddDashboardAuthentication(builder.Configuration);
+
+builder.Services.Configure<InvitationPurgeOptions>(builder.Configuration.GetSection(InvitationPurgeOptions.SectionName));
 
 WebApplication app = builder.Build();
 
