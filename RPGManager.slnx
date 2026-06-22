@@ -42,6 +42,9 @@
     <Project Path="Tests/Services/WebApi/WebApi.Application.UnitTests/WebApi.Application.UnitTests.csproj" />
     <Project Path="Tests/Services/WebApi/WebApi.infrastructure.UnitTests/WebApi.infrastructure.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/Tests/Services/Worker/">
+    <Project Path="Tests/Services/Worker/Worker.Application.UnitTests/Worker.Application.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Tests/Utilities/">
     <Project Path="Tests/Utilities/Caching.UnitTests/Caching.UnitTests.csproj" />
     <Project Path="Tests/Utilities/Identification.UnitTests/Identification.UnitTests.csproj" />
