@@ -8,7 +8,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.CampaignFeatures.DeleteCampaign;
 
 internal sealed class DeleteCampaignCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    ICampaignSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo) : ICommandManager<DeleteCampaignCommand>
 {
     public async Task<Result> Handle(DeleteCampaignCommand request, CancellationToken cancellationToken)

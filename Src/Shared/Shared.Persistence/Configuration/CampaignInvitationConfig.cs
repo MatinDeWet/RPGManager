@@ -22,6 +22,7 @@ internal sealed class CampaignInvitationConfig : IEntityTypeConfiguration<Campai
             .IsRequired();
 
         entity.Property(x => x.TokenHash)
+            .HasMaxLength(64)
             .IsRequired();
 
         entity.Property(x => x.IssuedByUserId)

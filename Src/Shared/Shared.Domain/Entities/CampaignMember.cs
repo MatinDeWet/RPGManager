@@ -23,4 +23,14 @@ public class CampaignMember : Entity
             Role = role,
         };
     }
+
+    public static CampaignMember Create(long campaignId, long userId, CampaignRole role)
+    {
+        return new CampaignMember
+        {
+            CampaignId = campaignId,
+            UserId = userId,
+            Role = role,
+        };
+    }
 }

@@ -5,7 +5,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 
 namespace WebApi.Application.Features.CampaignFeatures.GetCampaignById;
 
-internal sealed class GetCampaignByIdQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class GetCampaignByIdQueryHandler(ICampaignSecuredQueryRepo queryRepo)
     : IQueryManager<GetCampaignByIdQuery, GetCampaignByIdResponse>
 {
     public async Task<Result<GetCampaignByIdResponse>> Handle(GetCampaignByIdQuery request, CancellationToken cancellationToken)

@@ -8,7 +8,7 @@ using Shared.Domain.Entities;
 namespace WebApi.Application.Features.UserFeatures.UpsertUser;
 
 internal sealed class UpsertUserCommandHandler(
-    IUnsecuredQueryRepo queryRepo,
+    IUserUnsecuredQueryRepo queryRepo,
     IUnsecuredCommandRepo commandRepo) : ICommandManager<UpsertUserCommand, UpsertUserResponse>
 {
     public async Task<Result<UpsertUserResponse>> Handle(UpsertUserCommand request, CancellationToken cancellationToken)

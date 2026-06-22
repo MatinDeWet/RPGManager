@@ -9,7 +9,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.CampaignFeatures.CreateCampaign;
 
 internal sealed class CreateCampaignCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    IWorldSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo,
     IIdentityInfo identityInfo) : ICommandManager<CreateCampaignCommand, CreateCampaignResponse>
 {

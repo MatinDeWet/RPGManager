@@ -12,7 +12,7 @@ using Shared.Persistence.Data.Contexts;
 namespace Shared.Persistence.Data.Migrations.CoreMigrations
 {
     [DbContext(typeof(CoreContext))]
-    [Migration("20260622154244_AddCampaignInvitation")]
+    [Migration("20260622160826_AddCampaignInvitation")]
     partial class AddCampaignInvitation
     {
         /// <inheritdoc />
@@ -95,9 +95,10 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("TokenHash")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
-                        .HasColumnType("bytea");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 

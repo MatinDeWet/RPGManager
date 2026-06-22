@@ -8,7 +8,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.CampaignFeatures.UpdateCampaign;
 
 internal sealed class UpdateCampaignCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    ICampaignSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo) : ICommandManager<UpdateCampaignCommand>
 {
     public async Task<Result> Handle(UpdateCampaignCommand request, CancellationToken cancellationToken)

@@ -8,7 +8,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.WorldFeatures.UpdateWorld;
 
 internal sealed class UpdateWorldCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    IWorldSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo) : ICommandManager<UpdateWorldCommand>
 {
     public async Task<Result> Handle(UpdateWorldCommand request, CancellationToken cancellationToken)

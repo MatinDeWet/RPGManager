@@ -92,9 +92,10 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("TokenHash")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
-                        .HasColumnType("bytea");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 

@@ -14,7 +14,7 @@ public class CampaignInvitation : Entity<long>
 
     public string InviteeEmail { get; private set; } = null!;
 
-    public byte[] TokenHash { get; private set; } = null!;
+    public string TokenHash { get; private set; } = null!;
 
     public long IssuedByUserId { get; private set; }
 
@@ -30,16 +30,13 @@ public class CampaignInvitation : Entity<long>
 
     public DateTimeOffset? RespondedAt { get; private set; }
 
-    public static CampaignInvitation Create(long campaignId, string inviteeEmail, byte[] tokenHash, long issuedByUserId, DateTimeOffset expiresAt)
+    public static CampaignInvitation Create(long campaignId, string inviteeEmail, string tokenHash, long issuedByUserId, DateTimeOffset expiresAt)
     {
-        Guard.Against.Null(tokenHash, nameof(tokenHash));
-        Guard.Against.InvalidInput(tokenHash, nameof(tokenHash), x => x.Length > 0, "The token hash cannot be empty.");
-
         return new CampaignInvitation
         {
             CampaignId = campaignId,
             InviteeEmail = NormalizeEmail(inviteeEmail),
-            TokenHash = tokenHash,
+            TokenHash = Guard.Against.ValidString(tokenHash, nameof(tokenHash), maxLength: 64),
             IssuedByUserId = issuedByUserId,
             ExpiresAt = expiresAt,
             Status = InvitationStatus.Pending,

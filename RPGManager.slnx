@@ -39,6 +39,7 @@
   </Folder>
   <Folder Name="/Tests/Services/" />
   <Folder Name="/Tests/Services/WebApi/">
+    <Project Path="Tests/Services/WebApi/WebApi.Application.UnitTests/WebApi.Application.UnitTests.csproj" />
     <Project Path="Tests/Services/WebApi/WebApi.infrastructure.UnitTests/WebApi.infrastructure.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Tests/Utilities/">

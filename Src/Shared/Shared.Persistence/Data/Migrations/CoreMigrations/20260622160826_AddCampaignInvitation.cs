@@ -21,7 +21,7 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CampaignId = table.Column<long>(type: "bigint", nullable: false),
                     InviteeEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    TokenHash = table.Column<byte[]>(type: "bytea", nullable: false),
+                    TokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     IssuedByUserId = table.Column<long>(type: "bigint", nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),

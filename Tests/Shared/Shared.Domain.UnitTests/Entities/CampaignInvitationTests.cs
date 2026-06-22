@@ -7,7 +7,7 @@ namespace Shared.Domain.UnitTests.Entities;
 
 public class CampaignInvitationTests
 {
-    private static readonly byte[] Hash = [1, 2, 3, 4];
+    private const string Hash = "0123456789abcdef";
     private static readonly DateTimeOffset Expiry = DateTimeOffset.UtcNow.AddDays(7);
 
     private static CampaignInvitation Pending(string email = "invitee@example.com")
@@ -41,7 +41,7 @@ public class CampaignInvitationTests
     [Fact]
     public void Create_Throws_ForEmptyTokenHash()
     {
-        Should.Throw<ArgumentException>(() => CampaignInvitation.Create(1, "a@b.com", [], 10, Expiry));
+        Should.Throw<ArgumentException>(() => CampaignInvitation.Create(1, "a@b.com", string.Empty, 10, Expiry));
     }
 
     [Fact]

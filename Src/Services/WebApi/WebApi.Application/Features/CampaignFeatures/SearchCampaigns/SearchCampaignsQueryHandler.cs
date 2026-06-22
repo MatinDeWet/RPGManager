@@ -9,7 +9,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 
 namespace WebApi.Application.Features.CampaignFeatures.SearchCampaigns;
 
-internal sealed class SearchCampaignsQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class SearchCampaignsQueryHandler(ICampaignSecuredQueryRepo queryRepo)
     : IQueryManager<SearchCampaignsQuery, PageableResponse<SearchCampaignsResponse>>
 {
     public async Task<Result<PageableResponse<SearchCampaignsResponse>>> Handle(SearchCampaignsQuery request, CancellationToken cancellationToken)

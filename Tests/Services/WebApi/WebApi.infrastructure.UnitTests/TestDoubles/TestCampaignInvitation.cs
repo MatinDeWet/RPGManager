@@ -14,7 +14,7 @@ internal static class TestCampaignInvitation
         var invitation = CampaignInvitation.Create(
             campaignId,
             inviteeEmail,
-            tokenHash: [1, 2, 3, 4],
+            tokenHash: $"hash-{id}",
             issuedByUserId: 1,
             expiresAt: DateTimeOffset.UtcNow.AddDays(7));
 

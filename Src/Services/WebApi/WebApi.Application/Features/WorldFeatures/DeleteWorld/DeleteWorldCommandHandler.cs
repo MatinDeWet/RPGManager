@@ -8,7 +8,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.WorldFeatures.DeleteWorld;
 
 internal sealed class DeleteWorldCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    IWorldSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo) : ICommandManager<DeleteWorldCommand>
 {
     public async Task<Result> Handle(DeleteWorldCommand request, CancellationToken cancellationToken)
