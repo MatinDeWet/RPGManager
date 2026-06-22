@@ -15,6 +15,18 @@ public static class CampaignEndpoints
         group.MapUpdateCampaignEndpoint();
         group.MapDeleteCampaignEndpoint();
 
+        RouteGroupBuilder members = app.MapGroup("/campaigns").WithTags("Campaign Members");
+
+        members.MapGetCampaignMembersEndpoint();
+        members.MapKickCampaignMemberEndpoint();
+        members.MapLeaveCampaignEndpoint();
+
+        RouteGroupBuilder invitations = app.MapGroup("/campaigns").WithTags("Campaign Invitations");
+
+        invitations.MapCreateInvitationEndpoint();
+        invitations.MapGetPendingInvitationsEndpoint();
+        invitations.MapRevokeInvitationEndpoint();
+
         return app;
     }
 }
