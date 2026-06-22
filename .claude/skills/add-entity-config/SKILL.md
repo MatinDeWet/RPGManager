@@ -63,6 +63,26 @@ entity.HasMany(x => x.Transactions)
 
 Both sides describe the same `Transaction.UserId` FK; EF merges them into one relationship. The collection nav on the principal (`add-entity` adds it to the entity) and these two mappings always travel together. Only drop one side when the user explicitly asks for a one-directional (e.g. `WithMany()` with no inverse) relationship.
 
+## Delete behavior — choose it deliberately
+
+Set `OnDelete(...)` per FK; don't leave it implicit when the default is wrong:
+
+- **`Cascade`** (EF default for a required relationship) — child rows die with the parent. Right for aggregate parts (a `Campaign`'s `Members`/`Invitations`).
+- **`Restrict`** — block deleting the principal while children exist. Use for a *reference* FK that isn't an ownership link.
+- **`SetNull`** — null the FK, keep the child (audit record survives). Requires a **nullable** FK.
+
+**Multiple FK paths to the same principal need attention.** When one entity has two FKs to the same principal (e.g. `CampaignInvitation.IssuedByUserId` *and* `AcceptedByUserId` → `User`), leaving both `Cascade` creates a "multiple cascade paths" error. Pick non-cascading behavior on those reference FKs and let the owning aggregate's cascade do cleanup:
+
+```csharp
+entity.HasOne(x => x.IssuedBy).WithMany(x => x.IssuedInvitations)
+    .HasForeignKey(x => x.IssuedByUserId).OnDelete(DeleteBehavior.Restrict);
+
+entity.HasOne(x => x.AcceptedBy).WithMany(x => x.AcceptedInvitations)
+    .HasForeignKey(x => x.AcceptedByUserId).OnDelete(DeleteBehavior.SetNull); // nullable FK
+```
+
+A nullable FK (`long?`) is **optional by convention** — do **not** add `.IsRequired(false)`; it's redundant (and `SetNull` already implies optional).
+
 ## Composite-key join tables (many-to-many with role/payload)
 
 A join entity linking A and B (e.g. `CampaignMember` linking `Campaign` and `User` with a `Role`) is keyed on the **pair**, not a surrogate `Id`:
@@ -109,6 +129,14 @@ For a `string?` (or otherwise optional) property, **omit `.IsRequired()`** so th
 
 - **Full-text search**: map a generated `tsvector` column with `HasGeneratedTsVectorColumn` and give it its own GIN index.
 - **Unique constraint**: `entity.HasIndex(x => x.IdentityId).IsUnique();` (or a composite `x => new { ... }`).
+- **Filtered (partial) unique index** — uniqueness over a subset of rows. Pass raw SQL to `HasFilter`, quoting the column and using the stored enum's int value (derive it so it tracks the enum):
+
+  ```csharp
+  // at most one Pending invitation per (campaign, email); terminal rows are retained and excluded
+  entity.HasIndex(x => new { x.CampaignId, x.InviteeEmail })
+      .IsUnique()
+      .HasFilter($"\"{nameof(CampaignInvitation.Status)}\" = {(int)InvitationStatus.Pending}");
+  ```
 
 ## After scaffolding
 

@@ -18,6 +18,7 @@ Two files, layered: the **entity** in `Shared.Domain` (this skill), the **mappin
 - Mutate only through a static `Create` factory and instance `Update` methods.
 - Validate inputs with the shared guard clauses (`Guard.Against.ValidString(...)`, `using Ardalis.GuardClauses;` + `using Domain.Extensions;`). Put each validation in a `private static` helper so `Create` and `Update` share it.
 - **Foreign keys:** a `long <Owner>Id` plus a `virtual <Owner>` nav property — **and** add the matching collection nav on the owner entity (see section 2). Model on `Shared.Domain/Entities/World.cs` ↔ `User`.
+- **Comments:** match the sibling entities — they carry **no XML doc comments** on the class or on `Create`/`Update`/factory methods. Add a comment only for genuinely non-obvious rationale, not to restate what the code says. (A justified `[SuppressMessage]` with a `Justification` is fine where an analyzer rule genuinely doesn't fit, e.g. lower-casing an email for storage despite CA1308.)
 
 Template:
 
@@ -110,8 +111,14 @@ public class CampaignMember : Entity
 
     public static CampaignMember Create(long userId, CampaignRole role) =>
         new() { UserId = userId, Role = role };
+
+    // Overload for direct insert (not via a tracked parent collection): sets the FK explicitly.
+    public static CampaignMember Create(long campaignId, long userId, CampaignRole role) =>
+        new() { CampaignId = campaignId, UserId = userId, Role = role };
 }
 ```
+
+The `Create(userId, role)` form is for adding to a tracked parent's collection (EF fills the FK via the relationship). Add the `Create(campaignId, …)` overload when a handler inserts the link **directly** through the command repo (the parent isn't loaded) — e.g. an invitee accepting an invitation creates their `CampaignMember` row without loading the `Campaign` aggregate.
 
 ## 4. Create the EF configuration
 

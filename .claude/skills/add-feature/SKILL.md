@@ -15,16 +15,20 @@ Custom CQRS via `CQRS.Core` (not MediatR). One folder per feature under `Src/Ser
 | `ICommand<TResponse>` | `ICommandManager<TCommand, TResponse>` | `Task<Result<TResponse>>` |
 | `ICommand` (no payload) | `ICommandManager<TCommand>` | `Task<Result>` |
 
-Requests are `public sealed record`. Handlers are `internal sealed class`. Use `Ardalis.Result` — `Result.NotFound()`, `Result.Success()`, or return the value directly (implicit conversion to `Result<T>`).
+Requests are `public sealed record`. Handlers are `internal sealed class`. Use `Ardalis.Result` — `Result.NotFound()`, `Result.Conflict(...)`, `Result.Forbidden()`, `Result.Error(...)`, or return the value directly (implicit conversion to `Result<T>`).
+
+**Naming — derive every type from the feature folder name, not the entity.** Folder `GetCampaignMembers/` → `GetCampaignMembersQuery`, `GetCampaignMembersQueryHandler`, `GetCampaignMembersResponse` (even when the query returns a list of members — the per-item DTO is still `GetCampaignMembersResponse`, mirroring `SearchCampaignsResponse`). Don't name the response after the entity (`CampaignMemberResponse` is wrong).
+
+**Return the value directly — don't wrap in `Result.Success(...)`.** For an object, `return response;`. For a **list**, type the local as the concrete `List<T>` (satisfies CA1859 and the implicit conversion) and `return list;` against a `Result<IReadOnlyList<T>>` return type — `Result.Success(list)` is redundant.
 
 **Give failure results a descriptive message** (the convention across the codebase): pass a sentence to `Result.NotFound(...)` / `Result.Forbidden(...)` naming the resource and why it failed — e.g. `Result.NotFound($"Campaign '{request.Id}' was not found or the current user is not a member of it.")`. The message surfaces to the client through `ToMinimalApiResult` (see `add-endpoint`). Reserve bare `Result.NotFound()` for cases with nothing useful to add.
 
 ## Repositories to inject
 
-- Reads: `ISecuredQueryRepo` (row-level filtered to the current user) — `WebApi.Application.Repositories.QueryRepos.SecuredRepos`. Its queryables (e.g. `queryRepo.Transactions`) are already user-scoped.
-- Writes: `ISecuredCommandRepo` (`WebApi.Application.Repositories.CommandRepos.SecuredRepos`) — `InsertAsync/UpdateAsync/DeleteAsync` (each with a `persistImmediately` overload) + `SaveAsync`. It runs the entity's `Lock.HasAccess` before staging.
-- Current user id: inject `IIdentityInfo` (`Identification.Contracts`) → `GetInternalUserId()`. Needed on Create to set the owner FK.
-- Pre-auth only: the `IUnsecured*` repos.
+- Reads: the **per-entity** secured query repo `I<Entity>SecuredQueryRepo` (e.g. `ITransactionSecuredQueryRepo`, exposing `.Transactions`) — `WebApi.Application.Repositories.QueryRepos.SecuredRepos`. Row-level filtered to the current user. Inject the one whose entity you read (a handler may read one entity and write another).
+- Writes: the **generic** `ISecuredCommandRepo` (`...CommandRepos.SecuredRepos`) — `InsertAsync/UpdateAsync/DeleteAsync` (each with a `persistImmediately` overload) + `SaveAsync`. It runs the entity's `Lock.HasAccess` before staging. (Command repos are *not* split per entity.)
+- Current user id: inject `IIdentityInfo` (`Identification.Contracts`) → `GetInternalUserId()`. Needed on Create to set the owner FK. The signed-in email is `GetValue(ClaimConstants.Email)`.
+- Handler-authorized / pre-auth flows: the per-entity `I<Entity>UnsecuredQueryRepo` + generic `IUnsecuredCommandRepo` (see `add-secured-repo`).
 
 ## Templates
 
@@ -47,7 +51,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.TransactionFeatures.GetTransactionById;
 
-internal sealed class GetTransactionByIdQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class GetTransactionByIdQueryHandler(ITransactionSecuredQueryRepo queryRepo)
     : IQueryManager<GetTransactionByIdQuery, GetTransactionByIdResponse>
 {
     public async Task<Result<GetTransactionByIdResponse>> Handle(GetTransactionByIdQuery request, CancellationToken cancellationToken)

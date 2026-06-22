@@ -86,6 +86,27 @@ private readonly record struct SearchTransactionsRequest(
 
 `public static class` with `Map<Entity>Endpoints(this IEndpointRouteBuilder app)`: `app.MapGroup("/<entities>").WithTags("<Entities>")`, then call each `group.Map<Name>Endpoint();`. Create this file the first time you add the entity's first endpoint.
 
+**Sub-resources get their own tag via a dedicated group builder — not a per-endpoint `.WithTags`.** When an entity's routes split into sub-resources (e.g. `/campaigns/{id}/members`, `/campaigns/{id}/invitations`), declare a **sibling group on the same prefix** with its own tag so OpenAPI groups them separately. Set the tag once on the group builder; don't repeat `.WithTags(...)` on each endpoint:
+
+```csharp
+public static IEndpointRouteBuilder MapCampaignEndpoints(this IEndpointRouteBuilder app)
+{
+    RouteGroupBuilder group = app.MapGroup("/campaigns").WithTags("Campaigns");
+    group.MapGetCampaignByIdEndpoint(); // …campaign CRUD…
+
+    RouteGroupBuilder members = app.MapGroup("/campaigns").WithTags("Campaign Members");
+    members.MapGetCampaignMembersEndpoint();   // route: "/{id:long}/members"
+    members.MapKickCampaignMemberEndpoint();    // route: "/{id:long}/members/{userId:long}"
+
+    RouteGroupBuilder invitations = app.MapGroup("/campaigns").WithTags("Campaign Invitations");
+    invitations.MapCreateInvitationEndpoint();  // route: "/{id:long}/invitations"
+
+    return app;
+}
+```
+
+Routes are unchanged (each endpoint still maps its full pattern); the extra group builders only carry the tag. A literal segment (`/members/me`) and a constrained param (`/members/{userId:long}`) on the same path don't conflict. A flow keyed by something other than the parent id (e.g. an invite token) belongs in its **own** top-level group + file (`InvitationEndpoints` on `/invitations`, mapped separately in `Program.cs`).
+
 ## 3. Map the group in `Program.cs`
 
 Add `app.Map<Entity>Endpoints();` alongside `app.MapUserEndpoints();` / `app.MapCardEndpoints();` (and the `using` for the namespace).
