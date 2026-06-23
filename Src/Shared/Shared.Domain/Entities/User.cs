@@ -28,6 +28,22 @@ public class User : Entity<long>
         };
     }
 
+    /// <summary>
+    /// Applies the latest identity-provider details, returning <see langword="true"/> when a change was made.
+    /// </summary>
+    public bool Update(string email)
+    {
+        string validEmail = ValidEmail(email);
+
+        if (string.Equals(Email, validEmail, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        Email = validEmail;
+        return true;
+    }
+
     private static string ValidIdentityId(string identityId)
     {
         return Guard.Against.ValidString(identityId, nameof(identityId), maxLength: 256);
