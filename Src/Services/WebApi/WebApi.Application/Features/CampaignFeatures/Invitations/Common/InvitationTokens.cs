@@ -3,11 +3,6 @@ using System.Text;
 
 namespace WebApi.Application.Features.CampaignFeatures.Invitations.Common;
 
-/// <summary>
-/// Generates and hashes the one-time invitation token. The raw token is returned to the issuing
-/// Dungeon Master exactly once; only its SHA-256 hash is persisted, so a leaked database cannot be
-/// used to accept invitations.
-/// </summary>
 internal static class InvitationTokens
 {
     private const int TokenBytes = 32;
