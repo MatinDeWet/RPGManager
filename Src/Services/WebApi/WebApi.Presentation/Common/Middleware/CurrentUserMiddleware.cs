@@ -31,11 +31,13 @@ internal sealed class CurrentUserMiddleware(RequestDelegate next)
 
         if (!string.IsNullOrWhiteSpace(externalId))
         {
+            string email = context.User.FindFirstValue(ClaimConstants.Email) ?? string.Empty;
+
             UserCacheModel user = await cache.GetOrCreateAsync(
                 UserCacheKeys.ByExternalId(externalId),
                 async ct =>
                 {
-                    Result<UpsertUserResponse> result = await upsertUser.Handle(new UpsertUserCommand(externalId), ct);
+                    Result<UpsertUserResponse> result = await upsertUser.Handle(new UpsertUserCommand(externalId, email), ct);
 
                     if (!result.IsSuccess)
                     {

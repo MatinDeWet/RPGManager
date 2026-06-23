@@ -21,7 +21,7 @@ internal sealed class UpsertUserCommandHandler(
             return new UpsertUserResponse(user.Id, user.IdentityId);
         }
 
-        user = User.Create(request.ExternalId);
+        user = User.Create(request.ExternalId, request.Email);
         await commandRepo.InsertAsync(user, persistImmediately: true, cancellationToken);
 
         return new UpsertUserResponse(user.Id, user.IdentityId);
