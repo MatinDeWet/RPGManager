@@ -23,8 +23,6 @@ internal sealed class UpdateCampaignCommandHandler(
 
         campaign.Update(request.Name, request.Description);
 
-        // The secured repository authorises the write against the campaign lock (Dungeon Master only);
-        // a non-DM member surfaces as a 403 via the global exception handler.
         await commandRepo.UpdateAsync(campaign, persistImmediately: true, cancellationToken);
 
         return Result.Success();

@@ -14,7 +14,6 @@ internal sealed class RevokeInvitationCommandHandler(
 {
     public async Task<Result> Handle(RevokeInvitationCommand request, CancellationToken cancellationToken)
     {
-        // Invitations is row-level filtered to campaigns the caller is the Dungeon Master of.
         CampaignInvitation? invitation = await queryRepo.Invitations
             .FirstOrDefaultAsync(x => x.Id == request.InvitationId && x.CampaignId == request.CampaignId, cancellationToken);
 

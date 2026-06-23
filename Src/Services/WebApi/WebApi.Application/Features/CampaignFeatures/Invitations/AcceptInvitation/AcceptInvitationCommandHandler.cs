@@ -21,7 +21,6 @@ internal sealed class AcceptInvitationCommandHandler(
     {
         string tokenHash = InvitationTokens.Hash(request.Token);
 
-        // The invitee is not yet a member, so this runs unsecured; the raw token is the credential.
         CampaignInvitation? invitation = await invitationQueryRepo.Invitations
             .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
 
@@ -40,8 +39,6 @@ internal sealed class AcceptInvitationCommandHandler(
             return Result.Conflict("The invitation has expired.");
         }
 
-        // The caller must prove control of the invited address: a present, IdP-verified email claim
-        // that matches the invitee. An unverified or absent claim fails closed.
         string email = identityInfo.GetValue(ClaimConstants.Email);
         bool emailVerified = bool.TryParse(identityInfo.GetValue(ClaimConstants.EmailVerified), out bool verified) && verified;
 

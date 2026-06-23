@@ -28,7 +28,6 @@ public class Campaign : Entity<long>
             Description = ValidDescription(description),
         };
 
-        // The creator is always enrolled as the campaign's first Dungeon Master.
         campaign.Members.Add(CampaignMember.Create(creatorUserId, CampaignRole.DungeonMaster));
 
         return campaign;

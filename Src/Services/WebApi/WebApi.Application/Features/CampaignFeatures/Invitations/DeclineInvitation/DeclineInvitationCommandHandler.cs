@@ -38,8 +38,6 @@ internal sealed class DeclineInvitationCommandHandler(
             return Result.Conflict("The invitation has expired.");
         }
 
-        // The caller must prove control of the invited address: a present, IdP-verified email claim
-        // that matches the invitee. An unverified or absent claim fails closed.
         string email = identityInfo.GetValue(ClaimConstants.Email);
         bool emailVerified = bool.TryParse(identityInfo.GetValue(ClaimConstants.EmailVerified), out bool verified) && verified;
 

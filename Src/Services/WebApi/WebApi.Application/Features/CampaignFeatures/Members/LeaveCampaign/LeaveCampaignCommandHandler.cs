@@ -18,9 +18,6 @@ internal sealed class LeaveCampaignCommandHandler(
     {
         long userId = identityInfo.GetInternalUserId();
 
-        // The campaign lock only authorises Dungeon Master writes, so a Player cannot remove their own
-        // membership through the secured repository. Authorisation here is self-membership: a caller
-        // may only remove their own row.
         CampaignMember? membership = await queryRepo.CampaignMembers
             .FirstOrDefaultAsync(x => x.CampaignId == request.CampaignId && x.UserId == userId, cancellationToken);
 

@@ -10,9 +10,6 @@ internal sealed class GetCampaignMembersQueryHandler(ICampaignSecuredQueryRepo q
 {
     public async Task<Result<IReadOnlyList<GetCampaignMembersResponse>>> Handle(GetCampaignMembersQuery request, CancellationToken cancellationToken)
     {
-        // Campaigns is row-level filtered to the current user, so members are only returned for a
-        // campaign the caller is a member of. A visible campaign always has at least the Dungeon
-        // Master, so an empty result means the campaign is not visible to the caller.
         List<GetCampaignMembersResponse> members = await queryRepo.Campaigns
             .Where(x => x.Id == request.CampaignId)
             .SelectMany(x => x.Members)

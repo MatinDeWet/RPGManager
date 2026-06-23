@@ -7,9 +7,6 @@ namespace Worker.Presentation.Common.DIExtensions;
 
 public static class RecurringJobExtensions
 {
-    /// <summary>
-    /// Registers the worker's recurring Hangfire jobs. Called once after the host is built.
-    /// </summary>
     public static IHost RegisterRecurringJobs(this IHost host)
     {
         IRecurringJobManager recurringJobs = host.Services.GetRequiredService<IRecurringJobManager>();

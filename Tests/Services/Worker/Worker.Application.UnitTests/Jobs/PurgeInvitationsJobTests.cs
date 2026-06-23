@@ -84,8 +84,6 @@ public class PurgeInvitationsJobTests
     [Fact]
     public void IsPurgeable_IsFalse_ForOldInvitationResolvedRecently()
     {
-        // Created long before the cutoff but only just accepted: retention is measured from resolution,
-        // so it must still get its full grace window rather than being purged on its creation date.
         CampaignInvitation invitation = Invitation(
             InvitationStatus.Accepted,
             expiresAt: Now.AddDays(-33),

@@ -7,12 +7,6 @@ using Shared.Persistence.Data.Contexts;
 
 namespace WebApi.infrastructure.Repositories.Locks;
 
-/// <summary>
-/// Row-level protection for <see cref="CampaignMember"/>: a user may read the roster of any campaign
-/// they belong to, but only the campaign's Dungeon Master may modify membership (e.g. kick a player).
-/// A player leaving (removing their own membership) is authorised at the handler level through the
-/// unsecured repository, since this lock would otherwise block it.
-/// </summary>
 internal sealed class CampaignMemberLock(CoreContext context) : Lock<CampaignMember>
 {
     public override IQueryable<CampaignMember> Secured(long userId)

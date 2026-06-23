@@ -116,8 +116,6 @@ public class CreateInvitationCommandHandlerTests
         SetupVisible(true);
         CampaignInvitation racingPending = TestEntities.Invitation(3, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddDays(3));
 
-        // Empty on the pre-check (so we attempt the insert), then a conflicting pending invitation on
-        // the post-failure re-check, modelling a concurrent create that won the race.
         _invitationQueryRepo.Invitations.Returns(
             Array.Empty<CampaignInvitation>().BuildMock(),
             new[] { racingPending }.BuildMock());

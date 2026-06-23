@@ -22,9 +22,6 @@ internal sealed class CreateInvitationCommandHandler(
 {
     public async Task<Result<CreateInvitationResponse>> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
     {
-        // Campaigns is row-level filtered to the current user; a campaign the caller is not a member
-        // of surfaces as a 404. Whether the caller is the Dungeon Master is enforced by the
-        // invitation lock on insert (a non-DM member surfaces as a 403).
         bool isMember = await campaignQueryRepo.Campaigns
             .AnyAsync(x => x.Id == request.CampaignId, cancellationToken);
 
@@ -35,8 +32,6 @@ internal sealed class CreateInvitationCommandHandler(
 
         string normalizedEmail = CampaignInvitation.NormalizeEmail(request.InviteeEmail);
 
-        // Inviting someone who is already in the campaign is pointless; match the invitee email against
-        // the stored email of the campaign's members.
         bool inviteeAlreadyMember = await memberQueryRepo.CampaignMembers
             .AnyAsync(x => x.CampaignId == request.CampaignId && x.User.Email == normalizedEmail, cancellationToken);
 
@@ -45,11 +40,6 @@ internal sealed class CreateInvitationCommandHandler(
             return Result.Conflict("This email belongs to a user who is already a member of the campaign.");
         }
 
-        // Expiry is derived (there is no stored Expired state), so an expired-but-still-pending
-        // invitation keeps occupying the one-pending-per-(campaign, email) slot enforced by the
-        // filtered unique index. Revoke such a stale row so a fresh invitation can be issued;
-        // a still-valid pending invitation is a genuine conflict. Invitations is filtered to
-        // campaigns the caller is the Dungeon Master of, matching the create authorisation.
         CampaignInvitation? existing = await invitationQueryRepo.Invitations
             .FirstOrDefaultAsync(
                 x => x.CampaignId == request.CampaignId
@@ -86,9 +76,6 @@ internal sealed class CreateInvitationCommandHandler(
         }
         catch (DbUpdateException)
         {
-            // The only expected failure is a concurrent request having created a pending invitation for
-            // the same campaign and email after our check, which the filtered unique index rejected. Any
-            // other update failure is unexpected and propagates.
             if (await HasPendingInvitationAsync(request.CampaignId, normalizedEmail, cancellationToken))
             {
                 return Result.Conflict("A pending invitation already exists for this email address.");
