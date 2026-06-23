@@ -11,8 +11,6 @@ internal sealed class GetPendingInvitationsQueryHandler(ICampaignInvitationSecur
 {
     public async Task<Result<IReadOnlyList<GetPendingInvitationsResponse>>> Handle(GetPendingInvitationsQuery request, CancellationToken cancellationToken)
     {
-        // Invitations is row-level filtered to campaigns the caller is the Dungeon Master of, so a
-        // non-DM (or non-member) simply sees an empty list.
         List<GetPendingInvitationsResponse> invitations = await queryRepo.Invitations
             .Where(x => x.CampaignId == request.CampaignId && x.Status == InvitationStatus.Pending)
             .Select(x => new GetPendingInvitationsResponse(x.Id, x.InviteeEmail, x.ExpiresAt, x.DateCreated))
