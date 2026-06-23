@@ -117,7 +117,7 @@ public class AcceptInvitationCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_DoesNotInsertMembership_WhenAlreadyAMember()
+    public async Task Handle_ReturnsConflict_WhenAlreadyAMember()
     {
         CampaignInvitation invitation = TestEntities.Invitation(1, campaignId: 5, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
         SetupInvitation(invitation);
@@ -125,9 +125,9 @@ public class AcceptInvitationCommandHandlerTests
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
-        result.IsSuccess.ShouldBeTrue();
-        invitation.Status.ShouldBe(InvitationStatus.Accepted);
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        invitation.Status.ShouldBe(InvitationStatus.Pending);
         await _commandRepo.DidNotReceive().InsertAsync(Arg.Any<CampaignMember>(), Ct);
-        await _commandRepo.Received(1).SaveAsync(Ct);
+        await _commandRepo.DidNotReceive().SaveAsync(Ct);
     }
 }

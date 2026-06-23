@@ -55,13 +55,14 @@ internal sealed class AcceptInvitationCommandHandler(
         bool alreadyMember = await memberQueryRepo.CampaignMembers
             .AnyAsync(x => x.CampaignId == invitation.CampaignId && x.UserId == userId, cancellationToken);
 
+        if (alreadyMember)
+        {
+            return Result.Conflict("You are already a member of this campaign.");
+        }
+
         invitation.Accept(userId);
         await commandRepo.UpdateAsync(invitation, cancellationToken);
-
-        if (!alreadyMember)
-        {
-            await commandRepo.InsertAsync(CampaignMember.Create(invitation.CampaignId, userId, CampaignRole.Player), cancellationToken);
-        }
+        await commandRepo.InsertAsync(CampaignMember.Create(invitation.CampaignId, userId, CampaignRole.Player), cancellationToken);
 
         await commandRepo.SaveAsync(cancellationToken);
 
