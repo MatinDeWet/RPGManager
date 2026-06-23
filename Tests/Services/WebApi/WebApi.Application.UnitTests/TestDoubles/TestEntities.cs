@@ -3,10 +3,6 @@ using Shared.Domain.Enums;
 
 namespace WebApi.Application.UnitTests.TestDoubles;
 
-/// <summary>
-/// Builds domain entities with database-generated identifiers assigned via reflection, so handler
-/// tests can exercise lookups by id without a real database.
-/// </summary>
 internal static class TestEntities
 {
     public static Campaign Campaign(long id, long dungeonMasterUserId)
@@ -18,11 +14,17 @@ internal static class TestEntities
         return campaign;
     }
 
-    public static CampaignMember Member(long campaignId, long userId, CampaignRole role)
+    public static CampaignMember Member(long campaignId, long userId, CampaignRole role, string? email = null)
     {
         var member = CampaignMember.Create(userId, role);
 
         typeof(CampaignMember).GetProperty(nameof(CampaignMember.CampaignId))!.SetValue(member, campaignId);
+
+        if (email is not null)
+        {
+            typeof(CampaignMember).GetProperty(nameof(CampaignMember.User))!
+                .SetValue(member, User.Create($"external-{userId}", email));
+        }
 
         return member;
     }

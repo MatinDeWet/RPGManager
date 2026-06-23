@@ -14,6 +14,7 @@ namespace WebApi.Application.Features.CampaignFeatures.Invitations.CreateInvitat
 
 internal sealed class CreateInvitationCommandHandler(
     ICampaignSecuredQueryRepo campaignQueryRepo,
+    ICampaignMemberSecuredQueryRepo memberQueryRepo,
     ICampaignInvitationSecuredQueryRepo invitationQueryRepo,
     ISecuredCommandRepo commandRepo,
     IIdentityInfo identityInfo,
@@ -32,13 +33,23 @@ internal sealed class CreateInvitationCommandHandler(
             return Result.NotFound($"Campaign '{request.CampaignId}' was not found or the current user is not a member of it.");
         }
 
+        string normalizedEmail = CampaignInvitation.NormalizeEmail(request.InviteeEmail);
+
+        // Inviting someone who is already in the campaign is pointless; match the invitee email against
+        // the stored email of the campaign's members.
+        bool inviteeAlreadyMember = await memberQueryRepo.CampaignMembers
+            .AnyAsync(x => x.CampaignId == request.CampaignId && x.User.Email == normalizedEmail, cancellationToken);
+
+        if (inviteeAlreadyMember)
+        {
+            return Result.Conflict("This email belongs to a user who is already a member of the campaign.");
+        }
+
         // Expiry is derived (there is no stored Expired state), so an expired-but-still-pending
         // invitation keeps occupying the one-pending-per-(campaign, email) slot enforced by the
         // filtered unique index. Revoke such a stale row so a fresh invitation can be issued;
         // a still-valid pending invitation is a genuine conflict. Invitations is filtered to
         // campaigns the caller is the Dungeon Master of, matching the create authorisation.
-        string normalizedEmail = CampaignInvitation.NormalizeEmail(request.InviteeEmail);
-
         CampaignInvitation? existing = await invitationQueryRepo.Invitations
             .FirstOrDefaultAsync(
                 x => x.CampaignId == request.CampaignId

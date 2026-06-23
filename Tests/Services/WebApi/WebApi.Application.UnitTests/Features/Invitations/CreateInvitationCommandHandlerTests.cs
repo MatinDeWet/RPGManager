@@ -21,6 +21,7 @@ public class CreateInvitationCommandHandlerTests
     private const string Email = "a@b.com";
 
     private readonly ICampaignSecuredQueryRepo _campaignQueryRepo = Substitute.For<ICampaignSecuredQueryRepo>();
+    private readonly ICampaignMemberSecuredQueryRepo _memberQueryRepo = Substitute.For<ICampaignMemberSecuredQueryRepo>();
     private readonly ICampaignInvitationSecuredQueryRepo _invitationQueryRepo = Substitute.For<ICampaignInvitationSecuredQueryRepo>();
     private readonly ISecuredCommandRepo _commandRepo = Substitute.For<ISecuredCommandRepo>();
     private readonly IIdentityInfo _identityInfo = Substitute.For<IIdentityInfo>();
@@ -28,11 +29,12 @@ public class CreateInvitationCommandHandlerTests
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private CreateInvitationCommandHandler Sut => new(_campaignQueryRepo, _invitationQueryRepo, _commandRepo, _identityInfo, _options);
+    private CreateInvitationCommandHandler Sut => new(_campaignQueryRepo, _memberQueryRepo, _invitationQueryRepo, _commandRepo, _identityInfo, _options);
 
     public CreateInvitationCommandHandlerTests()
     {
         _identityInfo.GetInternalUserId().Returns(10L);
+        _memberQueryRepo.CampaignMembers.Returns(Array.Empty<CampaignMember>().BuildMock());
         _invitationQueryRepo.Invitations.Returns(Array.Empty<CampaignInvitation>().BuildMock());
     }
 
@@ -64,6 +66,19 @@ public class CreateInvitationCommandHandlerTests
         result.Value.ExpiresAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow);
         await _commandRepo.Received(1).InsertAsync(Arg.Any<CampaignInvitation>(), Ct);
         await _commandRepo.Received(1).SaveAsync(Ct);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsConflict_WhenInviteeIsAlreadyAMember()
+    {
+        SetupVisible(true);
+        _memberQueryRepo.CampaignMembers.Returns(
+            new[] { TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.Player, email: Email) }.BuildMock());
+
+        Result<CreateInvitationResponse> result = await Sut.Handle(new CreateInvitationCommand(1, Email), Ct);
+
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        await _commandRepo.DidNotReceive().InsertAsync(Arg.Any<CampaignInvitation>(), Ct);
     }
 
     [Fact]
