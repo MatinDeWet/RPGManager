@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 using BlobStorage;
 using Caching;
 using WebApi.Application;
-using WebApi.Application.Common.Options;
 using WebApi.infrastructure;
 using WebApi.Presentation.Common.ExceptionHandling;
 
@@ -24,8 +23,7 @@ public static class ServiceCollectionExtensions
 
         services.AddApiDocumentation();
         services.AddJwtAuthentication(configuration);
-
-        services.Configure<InvitationOptions>(configuration.GetSection(InvitationOptions.SectionName));
+        services.AddApplicationOptions(configuration);
 
         services.AddApplication();
         services.AddInfrastructure(configuration, isDevelopmentOrStaging);
