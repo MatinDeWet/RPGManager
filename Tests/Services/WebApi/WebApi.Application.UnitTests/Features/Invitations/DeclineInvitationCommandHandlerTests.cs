@@ -31,6 +31,7 @@ public class DeclineInvitationCommandHandlerTests
     public DeclineInvitationCommandHandlerTests()
     {
         _identityInfo.GetValue(ClaimConstants.Email).Returns(Email);
+        _identityInfo.GetValue(ClaimConstants.EmailVerified).Returns("true");
     }
 
     private static string TokenHash => InvitationTokens.Hash(RawToken);

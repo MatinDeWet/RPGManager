@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -5,41 +6,38 @@ using Shared.Domain.Entities;
 using Shared.Domain.Enums;
 using Worker.Application.Logging;
 using Worker.Application.Options;
-using Worker.Application.Repositories.CommandRepos.UnsecuredRepos;
 using Worker.Application.Repositories.QueryRepos.UnsecuredRepos;
 
 namespace Worker.Application.Jobs;
 
 internal sealed class PurgeInvitationsJob(
     ICampaignInvitationUnsecuredQueryRepo queryRepo,
-    IUnsecuredCommandRepo commandRepo,
     IOptions<InvitationPurgeOptions> options,
     ILogger<PurgeInvitationsJob> logger) : IPurgeInvitationsJob
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        DateTimeOffset cutoff = now.AddDays(-options.Value.TerminalRetentionDays);
+        DateTimeOffset cutoff = DateTimeOffset.UtcNow.AddDays(-options.Value.TerminalRetentionDays);
 
-        // Terminal (no longer pending) or expired invitations that were created longer ago than the
-        // retention window. Pending-and-unexpired invitations are always kept.
-        List<CampaignInvitation> stale = await queryRepo.Invitations
-            .Where(x => (x.Status != InvitationStatus.Pending || x.ExpiresAt <= now) && x.DateCreated <= cutoff)
-            .ToListAsync(cancellationToken);
+        // A single set-based DELETE rather than loading every stale row into memory first.
+        int purged = await queryRepo.Invitations
+            .Where(IsPurgeable(cutoff))
+            .ExecuteDeleteAsync(cancellationToken);
 
-        if (stale.Count == 0)
-        {
-            logger.PurgedInvitations(0);
-            return;
-        }
+        logger.PurgedInvitations(purged);
+    }
 
-        foreach (CampaignInvitation invitation in stale)
-        {
-            await commandRepo.DeleteAsync(invitation, cancellationToken);
-        }
-
-        await commandRepo.SaveAsync(cancellationToken);
-
-        logger.PurgedInvitations(stale.Count);
+    /// <summary>
+    /// An invitation is purgeable once it has been inactive for longer than the retention window. The
+    /// window is measured from when it became inactive — <see cref="CampaignInvitation.RespondedAt"/>
+    /// for a terminal (accepted/declined/revoked) invitation, or <see cref="CampaignInvitation.ExpiresAt"/>
+    /// for one that lapsed while still pending — not from its creation, so a long-lived invitation that
+    /// was only just resolved still gets its full retention grace.
+    /// </summary>
+    internal static Expression<Func<CampaignInvitation, bool>> IsPurgeable(DateTimeOffset cutoff)
+    {
+        return x =>
+            x.Status != InvitationStatus.Pending && x.RespondedAt != null && x.RespondedAt <= cutoff
+            || x.Status == InvitationStatus.Pending && x.ExpiresAt <= cutoff;
     }
 }

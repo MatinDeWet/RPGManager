@@ -1,13 +1,7 @@
-using Microsoft.Extensions.Logging.Abstractions;
-using MockQueryable;
-using NSubstitute;
 using Shared.Domain.Entities;
 using Shared.Domain.Enums;
 using Shouldly;
 using Worker.Application.Jobs;
-using Worker.Application.Options;
-using Worker.Application.Repositories.CommandRepos.UnsecuredRepos;
-using Worker.Application.Repositories.QueryRepos.UnsecuredRepos;
 using Xunit;
 
 namespace Worker.Application.UnitTests.Jobs;
@@ -16,20 +10,18 @@ public class PurgeInvitationsJobTests
 {
     private const int RetentionDays = 30;
 
-    private readonly ICampaignInvitationUnsecuredQueryRepo _queryRepo = Substitute.For<ICampaignInvitationUnsecuredQueryRepo>();
-    private readonly IUnsecuredCommandRepo _commandRepo = Substitute.For<IUnsecuredCommandRepo>();
+    private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
+    private static readonly DateTimeOffset Cutoff = Now.AddDays(-RetentionDays);
 
-    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+    private static Func<CampaignInvitation, bool> Purgeable => PurgeInvitationsJob.IsPurgeable(Cutoff).Compile();
 
-    private PurgeInvitationsJob Sut => new(
-        _queryRepo,
-        _commandRepo,
-        Microsoft.Extensions.Options.Options.Create(new InvitationPurgeOptions { TerminalRetentionDays = RetentionDays }),
-        NullLogger<PurgeInvitationsJob>.Instance);
-
-    private static CampaignInvitation Invitation(string tokenHash, DateTimeOffset created, DateTimeOffset expiresAt, InvitationStatus status)
+    private static CampaignInvitation Invitation(
+        InvitationStatus status,
+        DateTimeOffset expiresAt,
+        DateTimeOffset? respondedAt = null,
+        DateTimeOffset? created = null)
     {
-        var invitation = CampaignInvitation.Create(campaignId: 1, "invitee@example.com", tokenHash, issuedByUserId: 1, expiresAt);
+        var invitation = CampaignInvitation.Create(campaignId: 1, "invitee@example.com", tokenHash: "h", issuedByUserId: 1, expiresAt);
 
         switch (status)
         {
@@ -47,46 +39,59 @@ public class PurgeInvitationsJobTests
                 break;
         }
 
-        typeof(CampaignInvitation).GetProperty(nameof(CampaignInvitation.DateCreated))!.SetValue(invitation, created);
+        if (created.HasValue)
+        {
+            SetProperty(invitation, nameof(CampaignInvitation.DateCreated), created.Value);
+        }
+
+        if (respondedAt.HasValue)
+        {
+            SetProperty(invitation, nameof(CampaignInvitation.RespondedAt), respondedAt.Value);
+        }
 
         return invitation;
     }
 
-    private void SetupInvitations(params CampaignInvitation[] invitations)
+    private static void SetProperty(CampaignInvitation invitation, string name, object value)
     {
-        _queryRepo.Invitations.Returns(invitations.BuildMock());
+        typeof(CampaignInvitation).GetProperty(name)!.SetValue(invitation, value);
     }
 
     [Fact]
-    public async Task RunAsync_DeletesTerminalOrExpiredInvitationsOlderThanRetention()
+    public void IsPurgeable_IsTrue_ForTerminalInvitationResolvedBeforeCutoff()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-
-        CampaignInvitation terminalOld = Invitation("a", created: now.AddDays(-40), expiresAt: now.AddDays(-33), InvitationStatus.Accepted);
-        CampaignInvitation expiredOld = Invitation("b", created: now.AddDays(-40), expiresAt: now.AddDays(-33), InvitationStatus.Pending);
-        CampaignInvitation pendingActive = Invitation("c", created: now.AddDays(-1), expiresAt: now.AddDays(6), InvitationStatus.Pending);
-        CampaignInvitation terminalRecent = Invitation("d", created: now.AddDays(-5), expiresAt: now.AddDays(2), InvitationStatus.Revoked);
-
-        SetupInvitations(terminalOld, expiredOld, pendingActive, terminalRecent);
-
-        await Sut.RunAsync(Ct);
-
-        await _commandRepo.Received(1).DeleteAsync(terminalOld, Ct);
-        await _commandRepo.Received(1).DeleteAsync(expiredOld, Ct);
-        await _commandRepo.DidNotReceive().DeleteAsync(pendingActive, Ct);
-        await _commandRepo.DidNotReceive().DeleteAsync(terminalRecent, Ct);
-        await _commandRepo.Received(1).SaveAsync(Ct);
+        Purgeable(Invitation(InvitationStatus.Accepted, expiresAt: Now.AddDays(-33), respondedAt: Now.AddDays(-31))).ShouldBeTrue();
     }
 
     [Fact]
-    public async Task RunAsync_DoesNothing_WhenNoStaleInvitations()
+    public void IsPurgeable_IsTrue_ForInvitationThatExpiredWhilePendingBeforeCutoff()
     {
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        SetupInvitations(Invitation("c", created: now.AddDays(-1), expiresAt: now.AddDays(6), InvitationStatus.Pending));
+        Purgeable(Invitation(InvitationStatus.Pending, expiresAt: Now.AddDays(-31))).ShouldBeTrue();
+    }
 
-        await Sut.RunAsync(Ct);
+    [Fact]
+    public void IsPurgeable_IsFalse_ForActivePendingInvitation()
+    {
+        Purgeable(Invitation(InvitationStatus.Pending, expiresAt: Now.AddDays(6))).ShouldBeFalse();
+    }
 
-        await _commandRepo.DidNotReceive().DeleteAsync(Arg.Any<CampaignInvitation>(), Ct);
-        await _commandRepo.DidNotReceive().SaveAsync(Ct);
+    [Fact]
+    public void IsPurgeable_IsFalse_ForRecentlyResolvedTerminalInvitation()
+    {
+        Purgeable(Invitation(InvitationStatus.Revoked, expiresAt: Now.AddDays(-1), respondedAt: Now.AddDays(-5))).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPurgeable_IsFalse_ForOldInvitationResolvedRecently()
+    {
+        // Created long before the cutoff but only just accepted: retention is measured from resolution,
+        // so it must still get its full grace window rather than being purged on its creation date.
+        CampaignInvitation invitation = Invitation(
+            InvitationStatus.Accepted,
+            expiresAt: Now.AddDays(-33),
+            respondedAt: Now.AddDays(-1),
+            created: Now.AddDays(-40));
+
+        Purgeable(invitation).ShouldBeFalse();
     }
 }

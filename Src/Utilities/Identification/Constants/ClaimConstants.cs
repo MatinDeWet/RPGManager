@@ -13,4 +13,6 @@ public static class ClaimConstants
     public const string Name = "name";
 
     public const string Email = "email";
+
+    public const string EmailVerified = "email_verified";
 }

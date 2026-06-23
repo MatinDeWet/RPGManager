@@ -8,6 +8,11 @@ namespace Shared.Domain.Entities;
 
 public class CampaignInvitation : Entity<long>
 {
+    // A pragmatic, deliberately liberal shape check: a single @ with non-whitespace local and domain
+    // parts and at least one dot in the domain. The authoritative check is the invitee proving control
+    // of the address via the verified IdP email claim at accept time.
+    private const string EmailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+
     public long CampaignId { get; private set; }
 
     public virtual Campaign Campaign { get; private set; } = null!;
@@ -32,10 +37,14 @@ public class CampaignInvitation : Entity<long>
 
     public static CampaignInvitation Create(long campaignId, string inviteeEmail, string tokenHash, long issuedByUserId, DateTimeOffset expiresAt)
     {
+        string normalizedEmail = NormalizeEmail(inviteeEmail);
+        Guard.Against.InvalidFormat(normalizedEmail, nameof(inviteeEmail), EmailPattern,
+            "inviteeEmail must be a valid email address.");
+
         return new CampaignInvitation
         {
             CampaignId = campaignId,
-            InviteeEmail = NormalizeEmail(inviteeEmail),
+            InviteeEmail = normalizedEmail,
             TokenHash = Guard.Against.ValidString(tokenHash, nameof(tokenHash), maxLength: 64),
             IssuedByUserId = issuedByUserId,
             ExpiresAt = expiresAt,

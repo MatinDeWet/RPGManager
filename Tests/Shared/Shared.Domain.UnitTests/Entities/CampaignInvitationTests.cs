@@ -33,6 +33,10 @@ public class CampaignInvitationTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
+    [InlineData("notanemail")]
+    [InlineData("missing@dot")]
+    [InlineData("@no-local.com")]
+    [InlineData("two@@ats.com")]
     public void Create_Throws_ForInvalidEmail(string? email)
     {
         Should.Throw<ArgumentException>(() => CampaignInvitation.Create(1, email!, Hash, 10, Expiry));

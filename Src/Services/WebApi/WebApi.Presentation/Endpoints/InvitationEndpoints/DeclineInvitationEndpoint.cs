@@ -10,7 +10,7 @@ internal static class DeclineInvitationEndpoint
 {
     public static RouteGroupBuilder MapDeclineInvitationEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/{token}/decline", DeclineInvitation)
+        group.MapPost("/decline", DeclineInvitation)
             .WithName("DeclineInvitation")
             .WithSummary("Declines an invitation using its token. The signed-in user's email must match the invitee.");
 
@@ -18,12 +18,16 @@ internal static class DeclineInvitationEndpoint
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> DeclineInvitation(
-        [FromRoute] string token,
+        [FromBody] DeclineInvitationRequest request,
         [FromServices] ICommandManager<DeclineInvitationCommand> handler,
         CancellationToken cancellationToken)
     {
-        Result result = await handler.Handle(new DeclineInvitationCommand(token), cancellationToken);
+        // The token is a bearer-equivalent secret, so it travels in the body rather than the URL,
+        // where it would leak into access logs, proxies and browser history.
+        Result result = await handler.Handle(new DeclineInvitationCommand(request.Token), cancellationToken);
 
         return result.ToMinimalApiResult();
     }
+
+    private sealed record DeclineInvitationRequest(string Token);
 }

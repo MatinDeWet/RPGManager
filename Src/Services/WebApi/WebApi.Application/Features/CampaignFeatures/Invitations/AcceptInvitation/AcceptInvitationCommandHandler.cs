@@ -37,12 +37,15 @@ internal sealed class AcceptInvitationCommandHandler(
 
         if (invitation.ExpiresAt <= DateTimeOffset.UtcNow)
         {
-            return Result.Error("The invitation has expired.");
+            return Result.Conflict("The invitation has expired.");
         }
 
+        // The caller must prove control of the invited address: a present, IdP-verified email claim
+        // that matches the invitee. An unverified or absent claim fails closed.
         string email = identityInfo.GetValue(ClaimConstants.Email);
+        bool emailVerified = bool.TryParse(identityInfo.GetValue(ClaimConstants.EmailVerified), out bool verified) && verified;
 
-        if (string.IsNullOrWhiteSpace(email) || CampaignInvitation.NormalizeEmail(email) != invitation.InviteeEmail)
+        if (!emailVerified || string.IsNullOrWhiteSpace(email) || CampaignInvitation.NormalizeEmail(email) != invitation.InviteeEmail)
         {
             return Result.Forbidden();
         }

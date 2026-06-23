@@ -34,6 +34,7 @@ public class AcceptInvitationCommandHandlerTests
     {
         _identityInfo.GetInternalUserId().Returns(UserId);
         _identityInfo.GetValue(ClaimConstants.Email).Returns(Email);
+        _identityInfo.GetValue(ClaimConstants.EmailVerified).Returns("true");
         _memberQueryRepo.CampaignMembers.Returns(Array.Empty<CampaignMember>().BuildMock());
     }
 
@@ -65,19 +66,32 @@ public class AcceptInvitationCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ReturnsError_WhenExpired()
+    public async Task Handle_ReturnsConflict_WhenExpired()
     {
         SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddMinutes(-1)));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
-        result.Status.ShouldBe(ResultStatus.Error);
+        result.Status.ShouldBe(ResultStatus.Conflict);
     }
 
     [Fact]
     public async Task Handle_ReturnsForbidden_WhenEmailDoesNotMatch()
     {
         _identityInfo.GetValue(ClaimConstants.Email).Returns("someone-else@example.com");
+        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
+
+        Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
+
+        result.Status.ShouldBe(ResultStatus.Forbidden);
+    }
+
+    [Theory]
+    [InlineData("false")]
+    [InlineData("")]
+    public async Task Handle_ReturnsForbidden_WhenEmailNotVerified(string emailVerified)
+    {
+        _identityInfo.GetValue(ClaimConstants.EmailVerified).Returns(emailVerified);
         SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);

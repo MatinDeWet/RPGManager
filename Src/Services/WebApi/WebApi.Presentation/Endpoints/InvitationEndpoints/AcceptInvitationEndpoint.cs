@@ -10,7 +10,7 @@ internal static class AcceptInvitationEndpoint
 {
     public static RouteGroupBuilder MapAcceptInvitationEndpoint(this RouteGroupBuilder group)
     {
-        group.MapPost("/{token}/accept", AcceptInvitation)
+        group.MapPost("/accept", AcceptInvitation)
             .WithName("AcceptInvitation")
             .WithSummary("Accepts an invitation using its token. The signed-in user's email must match the invitee.");
 
@@ -18,12 +18,16 @@ internal static class AcceptInvitationEndpoint
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> AcceptInvitation(
-        [FromRoute] string token,
+        [FromBody] AcceptInvitationRequest request,
         [FromServices] ICommandManager<AcceptInvitationCommand> handler,
         CancellationToken cancellationToken)
     {
-        Result result = await handler.Handle(new AcceptInvitationCommand(token), cancellationToken);
+        // The token is a bearer-equivalent secret, so it travels in the body rather than the URL,
+        // where it would leak into access logs, proxies and browser history.
+        Result result = await handler.Handle(new AcceptInvitationCommand(request.Token), cancellationToken);
 
         return result.ToMinimalApiResult();
     }
+
+    private sealed record AcceptInvitationRequest(string Token);
 }
