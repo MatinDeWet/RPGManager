@@ -63,7 +63,6 @@ internal sealed class AcceptInvitationCommandHandler(
             await commandRepo.InsertAsync(CampaignMember.Create(invitation.CampaignId, userId, CampaignRole.Player), cancellationToken);
         }
 
-        // A single save commits the invitation update and the new membership together.
         await commandRepo.SaveAsync(cancellationToken);
 
         return Result.Success();

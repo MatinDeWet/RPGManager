@@ -19,7 +19,6 @@ internal sealed class PurgeInvitationsJob(
     {
         DateTimeOffset cutoff = DateTimeOffset.UtcNow.AddDays(-options.Value.TerminalRetentionDays);
 
-        // A single set-based DELETE rather than loading every stale row into memory first.
         int purged = await queryRepo.Invitations
             .Where(IsPurgeable(cutoff))
             .ExecuteDeleteAsync(cancellationToken);

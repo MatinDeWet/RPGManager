@@ -17,7 +17,6 @@ internal sealed class CampaignMemberLock(CoreContext context) : Lock<CampaignMem
 {
     public override IQueryable<CampaignMember> Secured(long userId)
     {
-        // Every member row whose campaign the user is also a member of.
         return from member in context.Set<CampaignMember>()
                where context.Set<CampaignMember>()
                    .Any(membership => membership.CampaignId == member.CampaignId && membership.UserId == userId)

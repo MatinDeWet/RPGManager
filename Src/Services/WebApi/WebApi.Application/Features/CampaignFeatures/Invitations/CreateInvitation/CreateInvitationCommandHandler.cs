@@ -71,7 +71,6 @@ internal sealed class CreateInvitationCommandHandler(
 
         try
         {
-            // Commits the stale-invitation revoke (if any) and the new invitation together.
             await commandRepo.SaveAsync(cancellationToken);
         }
         catch (DbUpdateException)
