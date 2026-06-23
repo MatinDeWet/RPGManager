@@ -26,13 +26,6 @@ internal sealed class PurgeInvitationsJob(
         logger.PurgedInvitations(purged);
     }
 
-    /// <summary>
-    /// An invitation is purgeable once it has been inactive for longer than the retention window. The
-    /// window is measured from when it became inactive — <see cref="CampaignInvitation.RespondedAt"/>
-    /// for a terminal (accepted/declined/revoked) invitation, or <see cref="CampaignInvitation.ExpiresAt"/>
-    /// for one that lapsed while still pending — not from its creation, so a long-lived invitation that
-    /// was only just resolved still gets its full retention grace.
-    /// </summary>
     internal static Expression<Func<CampaignInvitation, bool>> IsPurgeable(DateTimeOffset cutoff)
     {
         return x =>
