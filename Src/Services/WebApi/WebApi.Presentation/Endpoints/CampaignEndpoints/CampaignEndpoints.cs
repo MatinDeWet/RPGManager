@@ -21,7 +21,7 @@ public static class CampaignEndpoints
         RouteGroupBuilder invitations = app.MapGroup("/campaigns").WithTags("Campaign Invitations");
 
         invitations.MapCreateInvitationEndpoint();
-        invitations.MapGetPendingInvitationsEndpoint();
+        invitations.MapSearchInvitationsEndpoint();
         invitations.MapRevokeInvitationEndpoint();
 
         return app;

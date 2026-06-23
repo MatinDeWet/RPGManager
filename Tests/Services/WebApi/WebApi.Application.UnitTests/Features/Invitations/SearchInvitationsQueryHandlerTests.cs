@@ -1,17 +1,18 @@
 using Ardalis.Result;
 using MockQueryable;
 using NSubstitute;
+using Pagination.Models.Responses;
 using Shared.Domain.Entities;
 using Shared.Domain.Enums;
 using Shouldly;
-using WebApi.Application.Features.CampaignFeatures.Invitations.GetPendingInvitations;
+using WebApi.Application.Features.CampaignFeatures.Invitations.SearchInvitations;
 using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 using WebApi.Application.UnitTests.TestDoubles;
 using Xunit;
 
 namespace WebApi.Application.UnitTests.Features.Invitations;
 
-public class GetPendingInvitationsQueryHandlerTests
+public class SearchInvitationsQueryHandlerTests
 {
     private readonly ICampaignInvitationSecuredQueryRepo _queryRepo = Substitute.For<ICampaignInvitationSecuredQueryRepo>();
 
@@ -19,7 +20,7 @@ public class GetPendingInvitationsQueryHandlerTests
 
     private static readonly DateTimeOffset Expiry = DateTimeOffset.UtcNow.AddDays(7);
 
-    private GetPendingInvitationsQueryHandler Sut => new(_queryRepo);
+    private SearchInvitationsQueryHandler Sut => new(_queryRepo);
 
     [Fact]
     public async Task Handle_ReturnsOnlyPendingInvitationsForTheCampaign()
@@ -29,9 +30,10 @@ public class GetPendingInvitationsQueryHandlerTests
         CampaignInvitation otherCampaign = TestEntities.Invitation(3, campaignId: 2, "e@f.com", "h3", Expiry);
         _queryRepo.Invitations.Returns(new[] { pending, accepted, otherCampaign }.BuildMock());
 
-        Result<IReadOnlyList<GetPendingInvitationsResponse>> result = await Sut.Handle(new GetPendingInvitationsQuery(1), Ct);
+        Result<PageableResponse<SearchInvitationsResponse>> result = await Sut.Handle(new SearchInvitationsQuery { CampaignId = 1 }, Ct);
 
         result.IsSuccess.ShouldBeTrue();
-        result.Value.Select(x => x.Id).ShouldBe([1]);
+        result.Value.Data.Select(x => x.Id).ShouldBe([1]);
+        result.Value.TotalRecords.ShouldBe(1);
     }
 }
