@@ -22,8 +22,6 @@ internal static class DeclineInvitationEndpoint
         [FromServices] ICommandManager<DeclineInvitationCommand> handler,
         CancellationToken cancellationToken)
     {
-        // The token is a bearer-equivalent secret, so it travels in the body rather than the URL,
-        // where it would leak into access logs, proxies and browser history.
         Result result = await handler.Handle(new DeclineInvitationCommand(request.Token), cancellationToken);
 
         return result.ToMinimalApiResult();
