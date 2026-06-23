@@ -18,6 +18,11 @@ internal sealed class UpsertUserCommandHandler(
 
         if (user is not null)
         {
+            if (user.Update(request.Email))
+            {
+                await commandRepo.UpdateAsync(user, persistImmediately: true, cancellationToken);
+            }
+
             return new UpsertUserResponse(user.Id, user.IdentityId);
         }
 
