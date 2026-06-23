@@ -8,9 +8,6 @@ namespace Shared.Domain.Entities;
 
 public class CampaignInvitation : Entity<long>
 {
-    // A pragmatic, deliberately liberal shape check: a single @ with non-whitespace local and domain
-    // parts and at least one dot in the domain. The authoritative check is the invitee proving control
-    // of the address via the verified IdP email claim at accept time.
     private const string EmailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
 
     public long CampaignId { get; private set; }
