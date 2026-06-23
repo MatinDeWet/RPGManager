@@ -46,7 +46,7 @@ public class LeaveCampaignCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenCallerIsTheDungeonMaster()
     {
-        SetupMembers(TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.DungeonMaster));
+        SetupMembers(TestCampaignMember.Create(campaignId: 1, userId: 20, CampaignRole.DungeonMaster));
 
         Result result = await Sut.Handle(new LeaveCampaignCommand(1), Ct);
 
@@ -56,7 +56,7 @@ public class LeaveCampaignCommandHandlerTests
     [Fact]
     public async Task Handle_DeletesMembership_WhenCallerIsAPlayer()
     {
-        CampaignMember membership = TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.Player);
+        CampaignMember membership = TestCampaignMember.Create(campaignId: 1, userId: 20, CampaignRole.Player);
         SetupMembers(membership);
 
         Result result = await Sut.Handle(new LeaveCampaignCommand(1), Ct);

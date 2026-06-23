@@ -58,7 +58,7 @@ public class AcceptInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenInvitationNotPending()
     {
-        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7), InvitationStatus.Revoked));
+        SetupInvitation(TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7), InvitationStatus.Revoked));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
@@ -68,7 +68,7 @@ public class AcceptInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenExpired()
     {
-        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddMinutes(-1)));
+        SetupInvitation(TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddMinutes(-1)));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
@@ -79,7 +79,7 @@ public class AcceptInvitationCommandHandlerTests
     public async Task Handle_ReturnsForbidden_WhenEmailDoesNotMatch()
     {
         _identityInfo.GetValue(ClaimConstants.Email).Returns("someone-else@example.com");
-        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
+        SetupInvitation(TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
@@ -92,7 +92,7 @@ public class AcceptInvitationCommandHandlerTests
     public async Task Handle_ReturnsForbidden_WhenEmailNotVerified(string emailVerified)
     {
         _identityInfo.GetValue(ClaimConstants.EmailVerified).Returns(emailVerified);
-        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
+        SetupInvitation(TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 
@@ -102,7 +102,7 @@ public class AcceptInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_AddsMemberAndAccepts_OnSuccess()
     {
-        CampaignInvitation invitation = TestEntities.Invitation(1, campaignId: 5, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
+        CampaignInvitation invitation = TestCampaignInvitation.Create(1, campaignId: 5, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
         SetupInvitation(invitation);
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
@@ -119,9 +119,9 @@ public class AcceptInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenAlreadyAMember()
     {
-        CampaignInvitation invitation = TestEntities.Invitation(1, campaignId: 5, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
+        CampaignInvitation invitation = TestCampaignInvitation.Create(1, campaignId: 5, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
         SetupInvitation(invitation);
-        _memberQueryRepo.CampaignMembers.Returns(new[] { TestEntities.Member(campaignId: 5, userId: UserId, CampaignRole.Player) }.BuildMock());
+        _memberQueryRepo.CampaignMembers.Returns(new[] { TestCampaignMember.Create(campaignId: 5, userId: UserId, CampaignRole.Player) }.BuildMock());
 
         Result result = await Sut.Handle(new AcceptInvitationCommand(RawToken), Ct);
 

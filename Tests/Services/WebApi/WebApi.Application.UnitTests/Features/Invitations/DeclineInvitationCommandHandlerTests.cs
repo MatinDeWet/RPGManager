@@ -55,7 +55,7 @@ public class DeclineInvitationCommandHandlerTests
     public async Task Handle_ReturnsForbidden_WhenEmailDoesNotMatch()
     {
         _identityInfo.GetValue(ClaimConstants.Email).Returns("someone-else@example.com");
-        SetupInvitation(TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
+        SetupInvitation(TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7)));
 
         Result result = await Sut.Handle(new DeclineInvitationCommand(RawToken), Ct);
 
@@ -65,7 +65,7 @@ public class DeclineInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_DeclinesAndPersists_OnSuccess()
     {
-        CampaignInvitation invitation = TestEntities.Invitation(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
+        CampaignInvitation invitation = TestCampaignInvitation.Create(1, 1, Email, TokenHash, DateTimeOffset.UtcNow.AddDays(7));
         SetupInvitation(invitation);
 
         Result result = await Sut.Handle(new DeclineInvitationCommand(RawToken), Ct);

@@ -39,7 +39,7 @@ public class KickCampaignMemberCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenTargetIsTheDungeonMaster()
     {
-        SetupMembers(TestEntities.Member(campaignId: 1, userId: 10, CampaignRole.DungeonMaster));
+        SetupMembers(TestCampaignMember.Create(campaignId: 1, userId: 10, CampaignRole.DungeonMaster));
 
         Result result = await Sut.Handle(new KickCampaignMemberCommand(1, 10), Ct);
 
@@ -49,7 +49,7 @@ public class KickCampaignMemberCommandHandlerTests
     [Fact]
     public async Task Handle_DeletesMember_WhenTargetIsAPlayer()
     {
-        CampaignMember target = TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.Player);
+        CampaignMember target = TestCampaignMember.Create(campaignId: 1, userId: 20, CampaignRole.Player);
         SetupMembers(target);
 
         Result result = await Sut.Handle(new KickCampaignMemberCommand(1, 20), Ct);
@@ -61,7 +61,7 @@ public class KickCampaignMemberCommandHandlerTests
     [Fact]
     public async Task Handle_PropagatesUnauthorized_WhenLockDeniesTheDelete()
     {
-        CampaignMember target = TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.Player);
+        CampaignMember target = TestCampaignMember.Create(campaignId: 1, userId: 20, CampaignRole.Player);
         SetupMembers(target);
         _commandRepo.When(x => x.DeleteAsync(target, true, Ct)).Do(_ => throw new UnauthorizedAccessException());
 

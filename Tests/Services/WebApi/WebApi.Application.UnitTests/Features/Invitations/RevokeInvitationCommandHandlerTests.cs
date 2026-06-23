@@ -41,7 +41,7 @@ public class RevokeInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_ReturnsConflict_WhenInvitationNotPending()
     {
-        Setup(TestEntities.Invitation(5, campaignId: 1, "a@b.com", "h1", Expiry, InvitationStatus.Accepted));
+        Setup(TestCampaignInvitation.Create(5, campaignId: 1, "a@b.com", "h1", Expiry, InvitationStatus.Accepted));
 
         Result result = await Sut.Handle(new RevokeInvitationCommand(1, 5), Ct);
 
@@ -51,7 +51,7 @@ public class RevokeInvitationCommandHandlerTests
     [Fact]
     public async Task Handle_RevokesAndPersists_WhenPending()
     {
-        CampaignInvitation invitation = TestEntities.Invitation(5, campaignId: 1, "a@b.com", "h1", Expiry);
+        CampaignInvitation invitation = TestCampaignInvitation.Create(5, campaignId: 1, "a@b.com", "h1", Expiry);
         Setup(invitation);
 
         Result result = await Sut.Handle(new RevokeInvitationCommand(1, 5), Ct);

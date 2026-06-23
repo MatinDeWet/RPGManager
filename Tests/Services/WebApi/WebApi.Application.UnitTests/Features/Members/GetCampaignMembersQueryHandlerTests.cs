@@ -22,7 +22,7 @@ public class GetCampaignMembersQueryHandlerTests
     [Fact]
     public async Task Handle_ReturnsMembers_WhenCampaignIsVisible()
     {
-        Campaign campaign = TestEntities.Campaign(id: 1, dungeonMasterUserId: 10);
+        Campaign campaign = TestCampaign.Create(id: 1, dungeonMasterUserId: 10);
         campaign.Members.Add(CampaignMember.Create(userId: 20, CampaignRole.Player));
         _queryRepo.Campaigns.Returns(new[] { campaign }.BuildMock());
 

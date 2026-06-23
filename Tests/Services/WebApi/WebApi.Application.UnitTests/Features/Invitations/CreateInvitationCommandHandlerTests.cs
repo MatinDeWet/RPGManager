@@ -40,7 +40,7 @@ public class CreateInvitationCommandHandlerTests
 
     private void SetupVisible(bool visible)
     {
-        Campaign[] campaigns = visible ? [TestEntities.Campaign(id: 1, dungeonMasterUserId: 10)] : [];
+        Campaign[] campaigns = visible ? [TestCampaign.Create(id: 1, dungeonMasterUserId: 10)] : [];
         _campaignQueryRepo.Campaigns.Returns(campaigns.BuildMock());
     }
 
@@ -73,7 +73,7 @@ public class CreateInvitationCommandHandlerTests
     {
         SetupVisible(true);
         _memberQueryRepo.CampaignMembers.Returns(
-            new[] { TestEntities.Member(campaignId: 1, userId: 20, CampaignRole.Player, email: Email) }.BuildMock());
+            new[] { TestCampaignMember.Create(campaignId: 1, userId: 20, CampaignRole.Player, email: Email) }.BuildMock());
 
         Result<CreateInvitationResponse> result = await Sut.Handle(new CreateInvitationCommand(1, Email), Ct);
 
@@ -85,7 +85,7 @@ public class CreateInvitationCommandHandlerTests
     public async Task Handle_ReturnsConflict_WhenValidPendingInvitationExists()
     {
         SetupVisible(true);
-        CampaignInvitation existing = TestEntities.Invitation(2, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddDays(3));
+        CampaignInvitation existing = TestCampaignInvitation.Create(2, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddDays(3));
         _invitationQueryRepo.Invitations.Returns(new[] { existing }.BuildMock());
 
         Result<CreateInvitationResponse> result = await Sut.Handle(new CreateInvitationCommand(1, Email), Ct);
@@ -98,7 +98,7 @@ public class CreateInvitationCommandHandlerTests
     public async Task Handle_RevokesStaleInvitationAndIssuesNew_WhenExistingPendingHasExpired()
     {
         SetupVisible(true);
-        CampaignInvitation expired = TestEntities.Invitation(2, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddMinutes(-1));
+        CampaignInvitation expired = TestCampaignInvitation.Create(2, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddMinutes(-1));
         _invitationQueryRepo.Invitations.Returns(new[] { expired }.BuildMock());
 
         Result<CreateInvitationResponse> result = await Sut.Handle(new CreateInvitationCommand(1, Email), Ct);
@@ -114,7 +114,7 @@ public class CreateInvitationCommandHandlerTests
     public async Task Handle_ReturnsConflict_WhenConcurrentInsertViolatesUniqueIndex()
     {
         SetupVisible(true);
-        CampaignInvitation racingPending = TestEntities.Invitation(3, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddDays(3));
+        CampaignInvitation racingPending = TestCampaignInvitation.Create(3, campaignId: 1, Email, tokenHash: "h", DateTimeOffset.UtcNow.AddDays(3));
 
         _invitationQueryRepo.Invitations.Returns(
             Array.Empty<CampaignInvitation>().BuildMock(),
