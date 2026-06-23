@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="WebApi.Application.UnitTests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="MatinDeWet.Pagination" />
       <PackageReference Include="MatinDeWet.Searchable.PostgreSQL" />
     </ItemGroup>

@@ -34,9 +34,16 @@
     <Project Path="Src/Utilities/CQRS/CQRS.Core/CQRS.Core.csproj" />
   </Folder>
   <Folder Name="/Tests/" />
+  <Folder Name="/Tests/Shared/">
+    <Project Path="Tests/Shared/Shared.Domain.UnitTests/Shared.Domain.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Tests/Services/" />
   <Folder Name="/Tests/Services/WebApi/">
+    <Project Path="Tests/Services/WebApi/WebApi.Application.UnitTests/WebApi.Application.UnitTests.csproj" />
     <Project Path="Tests/Services/WebApi/WebApi.infrastructure.UnitTests/WebApi.infrastructure.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Services/Worker/">
+    <Project Path="Tests/Services/Worker/Worker.Application.UnitTests/Worker.Application.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Tests/Utilities/">
     <Project Path="Tests/Utilities/Caching.UnitTests/Caching.UnitTests.csproj" />

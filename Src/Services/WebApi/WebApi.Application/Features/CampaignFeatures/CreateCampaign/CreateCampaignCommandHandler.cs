@@ -9,13 +9,12 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.CampaignFeatures.CreateCampaign;
 
 internal sealed class CreateCampaignCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    IWorldSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo,
     IIdentityInfo identityInfo) : ICommandManager<CreateCampaignCommand, CreateCampaignResponse>
 {
     public async Task<Result<CreateCampaignResponse>> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
-        // Worlds is row-level filtered to the current user, so this also enforces world ownership.
         bool ownsWorld = await queryRepo.Worlds
             .AnyAsync(x => x.Id == request.WorldId, cancellationToken);
 

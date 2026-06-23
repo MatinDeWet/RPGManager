@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
 
         services.AddApiDocumentation();
         services.AddJwtAuthentication(configuration);
+        services.AddApplicationOptions(configuration);
 
         services.AddApplication();
         services.AddInfrastructure(configuration, isDevelopmentOrStaging);

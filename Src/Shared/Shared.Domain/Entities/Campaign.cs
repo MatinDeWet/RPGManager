@@ -17,6 +17,8 @@ public class Campaign : Entity<long>
 
     public virtual ICollection<CampaignMember> Members { get; private set; } = [];
 
+    public virtual ICollection<CampaignInvitation> Invitations { get; private set; } = [];
+
     public static Campaign Create(long worldId, long creatorUserId, string name, string? description)
     {
         var campaign = new Campaign
@@ -26,7 +28,6 @@ public class Campaign : Entity<long>
             Description = ValidDescription(description),
         };
 
-        // The creator is always enrolled as the campaign's first Dungeon Master.
         campaign.Members.Add(CampaignMember.Create(creatorUserId, CampaignRole.DungeonMaster));
 
         return campaign;

@@ -58,6 +58,63 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                     b.ToTable("Campaign", "public");
                 });
 
+            modelBuilder.Entity("Shared.Domain.Entities.CampaignInvitation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AcceptedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CampaignId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InviteeEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<long>("IssuedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcceptedByUserId");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("IssuedByUserId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("CampaignId", "InviteeEmail")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 1");
+
+                    b.ToTable("CampaignInvitation", "public");
+                });
+
             modelBuilder.Entity("Shared.Domain.Entities.CampaignMember", b =>
                 {
                     b.Property<long>("CampaignId")
@@ -89,6 +146,11 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
 
                     b.Property<DateTimeOffset>("DateCreated")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("IdentityId")
                         .IsRequired()
@@ -149,6 +211,32 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
                     b.Navigation("World");
                 });
 
+            modelBuilder.Entity("Shared.Domain.Entities.CampaignInvitation", b =>
+                {
+                    b.HasOne("Shared.Domain.Entities.User", "AcceptedBy")
+                        .WithMany("AcceptedInvitations")
+                        .HasForeignKey("AcceptedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Shared.Domain.Entities.Campaign", "Campaign")
+                        .WithMany("Invitations")
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Shared.Domain.Entities.User", "IssuedBy")
+                        .WithMany("IssuedInvitations")
+                        .HasForeignKey("IssuedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AcceptedBy");
+
+                    b.Navigation("Campaign");
+
+                    b.Navigation("IssuedBy");
+                });
+
             modelBuilder.Entity("Shared.Domain.Entities.CampaignMember", b =>
                 {
                     b.HasOne("Shared.Domain.Entities.Campaign", "Campaign")
@@ -181,12 +269,18 @@ namespace Shared.Persistence.Data.Migrations.CoreMigrations
 
             modelBuilder.Entity("Shared.Domain.Entities.Campaign", b =>
                 {
+                    b.Navigation("Invitations");
+
                     b.Navigation("Members");
                 });
 
             modelBuilder.Entity("Shared.Domain.Entities.User", b =>
                 {
+                    b.Navigation("AcceptedInvitations");
+
                     b.Navigation("CampaignMemberships");
+
+                    b.Navigation("IssuedInvitations");
 
                     b.Navigation("Worlds");
                 });

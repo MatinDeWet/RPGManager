@@ -5,7 +5,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 
 namespace WebApi.Application.Features.WorldFeatures.GetWorldById;
 
-internal sealed class GetWorldByIdQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class GetWorldByIdQueryHandler(IWorldSecuredQueryRepo queryRepo)
     : IQueryManager<GetWorldByIdQuery, GetWorldByIdResponse>
 {
     public async Task<Result<GetWorldByIdResponse>> Handle(GetWorldByIdQuery request, CancellationToken cancellationToken)

@@ -1,6 +1,6 @@
 ---
 name: add-secured-repo
-description: Wire a domain entity into RPGManager's secured repository + lock (row-level security) pattern. Use when an entity's data must be scoped to the current user (e.g. "secure the Transaction entity so users only see their own"). Creates a Lock<T> (read filter + write access check), exposes a queryable on ISecuredQueryRepo, and adds matching lock unit tests.
+description: Wire a domain entity into RPGManager's secured repository + lock (row-level security) pattern. Use when an entity's data must be scoped to the current user (e.g. "secure the Transaction entity so users only see their own"). Creates a Lock<T> (read filter + write access check), exposes a per-entity secured query repo (I<Entity>SecuredQueryRepo), and adds matching lock unit tests.
 ---
 
 # Secure an entity with a Lock
@@ -44,6 +44,8 @@ internal sealed class TransactionLock(CoreContext context) : Lock<Transaction>
 
 `Secured` and `HasAccess` are plain methods with the `CoreContext`, so they can express access derived from other tables and vary by operation. Modeled on `CampaignLock` (a user reads campaigns they're a **member** of, but only a **DungeonMaster** may modify).
 
+Write `Secured` in **LINQ query syntax** (`from … where … select …`) to match the sibling locks — not the fluent `.Where(...)` form.
+
 **Membership/join-based read — drive the query from the join table.** Filter the join by `userId` and join out to the entity, so the planner uses the join's FK index (e.g. `IX_CampaignMember_UserId`) instead of scanning every row. A unique `(EntityId, UserId)` key keeps the result duplicate-free, so no `Distinct()` is needed:
 
 ```csharp
@@ -53,6 +55,18 @@ public override IQueryable<Campaign> Secured(long userId)
            join campaign in context.Set<Campaign>() on member.CampaignId equals campaign.Id
            where member.UserId == userId
            select campaign;
+}
+```
+
+**Securing the join entity itself (e.g. a roster) — use an `Any` subquery, not a self-join.** When the secured entity *is* the membership table (so a DM can manage members directly), filter rows whose campaign the caller also belongs to. A self-join of the table onto itself reads confusingly; a `where … Any(…)` subquery is clearer and emits a clean `EXISTS`:
+
+```csharp
+public override IQueryable<CampaignMember> Secured(long userId)
+{
+    return from member in context.Set<CampaignMember>()
+           where context.Set<CampaignMember>()
+               .Any(m => m.CampaignId == member.CampaignId && m.UserId == userId)
+           select member;
 }
 ```
 
@@ -109,12 +123,35 @@ internal sealed class UnauthorizedAccessExceptionHandler(IProblemDetailsService 
 
 Register it in `ServiceCollectionExtensions` (`services.AddProblemDetails();` + `services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();`) and add `app.UseExceptionHandler();` as the first middleware in `Program.cs`. This already exists — reuse it; only direct-ownership entities (read == write) never trip it.
 
-## 2. Expose a read queryable on the secured query repo
+## 2. Expose a read queryable — one secured query repo per entity
 
-- Interface — `Src/Services/WebApi/WebApi.Application/Repositories/QueryRepos/SecuredRepos/ISecuredQueryRepo.cs`: add `IQueryable<Transaction> Transactions { get; }`.
-- Impl — `Src/Services/WebApi/WebApi.infrastructure/Repositories/QueryRepos/SecuredRepos/SecuredQueryRepo.cs`: add `public IQueryable<Transaction> Transactions => GetQueryable<Transaction>();`.
+Query repos are split **per entity** (`I<Entity>SecuredQueryRepo`); command repos stay **generic** (`ISecuredCommandRepo` for all entities). Both auto-register via Scrutor (`AddSecuredRepositories` scans `ISecureQueryRepo`/`ISecureCommandRepo` impls + `IProtected`) — no manual DI. A handler injects the specific query repo it reads plus the generic `ISecuredCommandRepo` where it writes.
 
-`GetQueryable<T>()` resolves the lock and applies `Secured(currentUserId)` automatically.
+- Interface — `.../WebApi.Application/Repositories/QueryRepos/SecuredRepos/ITransactionSecuredQueryRepo.cs`:
+
+```csharp
+using Repository.Contracts;
+using Shared.Domain.Entities;
+
+namespace WebApi.Application.Repositories.QueryRepos.SecuredRepos;
+
+public interface ITransactionSecuredQueryRepo : ISecureQueryRepo
+{
+    IQueryable<Transaction> Transactions { get; }
+}
+```
+
+- Impl — `.../WebApi.infrastructure/Repositories/QueryRepos/SecuredRepos/TransactionSecuredQueryRepo.cs`:
+
+```csharp
+internal sealed class TransactionSecuredQueryRepo(CoreContext context, IIdentityInfo info, IEnumerable<IProtected> protection)
+    : SecureQueryRepo<CoreContext>(context, info, protection), ITransactionSecuredQueryRepo
+{
+    public IQueryable<Transaction> Transactions => GetQueryable<Transaction>();
+}
+```
+
+`GetQueryable<T>()` resolves the lock and applies `Secured(currentUserId)` automatically. The property is named for the entity (plural). Don't add the entity to a shared/aggregate repo — there isn't one.
 
 ## 3. Lock unit tests (match existing coverage)
 
@@ -126,5 +163,5 @@ The repo tests every lock — mirror `UserLockTests`.
 
 ## Notes
 
-- **Pre-auth flows only** (e.g. login-time upsert) use the *unsecured* repos (`IUnsecuredQueryRepo`/`IUnsecuredCommandRepo`). Everything user-facing uses the secured ones.
+- **Pre-auth and handler-authorized flows** use the *unsecured* repos. Query side is **per entity** too (`I<Entity>UnsecuredQueryRepo`, e.g. `IUserUnsecuredQueryRepo`); command side is the generic `IUnsecuredCommandRepo`. Use these for login-time upsert (no identity yet) and for actions the lock would otherwise block but the handler authorizes itself (e.g. a Player leaving = deleting their own membership, or an invitee accepting via a token + email match). Everything else user-facing uses the secured repos.
 - `dotnet build` (warnings-as-errors) and run `dotnet test` for the infrastructure test project to confirm the new lock tests pass.

@@ -23,6 +23,10 @@ internal sealed class UserConfig : IEntityTypeConfiguration<User>
         entity.HasIndex(x => x.IdentityId)
             .IsUnique();
 
+        entity.Property(x => x.Email)
+            .HasMaxLength(256)
+            .IsRequired();
+
         entity.HasMany(x => x.Worlds)
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId);
@@ -30,5 +34,13 @@ internal sealed class UserConfig : IEntityTypeConfiguration<User>
         entity.HasMany(x => x.CampaignMemberships)
             .WithOne(x => x.User)
             .HasForeignKey(x => x.UserId);
+
+        entity.HasMany(x => x.IssuedInvitations)
+            .WithOne(x => x.IssuedBy)
+            .HasForeignKey(x => x.IssuedByUserId);
+
+        entity.HasMany(x => x.AcceptedInvitations)
+            .WithOne(x => x.AcceptedBy)
+            .HasForeignKey(x => x.AcceptedByUserId);
     }
 }

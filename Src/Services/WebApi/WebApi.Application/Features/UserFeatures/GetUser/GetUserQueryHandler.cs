@@ -5,7 +5,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 
 namespace WebApi.Application.Features.UserFeatures.GetUser;
 
-internal sealed class GetUserQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class GetUserQueryHandler(IUserSecuredQueryRepo queryRepo)
     : IQueryManager<GetUserQuery, GetUserResponse>
 {
     public async Task<Result<GetUserResponse>> Handle(GetUserQuery request, CancellationToken cancellationToken)

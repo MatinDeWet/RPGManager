@@ -8,7 +8,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 namespace WebApi.Application.Features.CampaignFeatures.UpdateCampaign;
 
 internal sealed class UpdateCampaignCommandHandler(
-    ISecuredQueryRepo queryRepo,
+    ICampaignSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo) : ICommandManager<UpdateCampaignCommand>
 {
     public async Task<Result> Handle(UpdateCampaignCommand request, CancellationToken cancellationToken)
@@ -23,8 +23,6 @@ internal sealed class UpdateCampaignCommandHandler(
 
         campaign.Update(request.Name, request.Description);
 
-        // The secured repository authorises the write against the campaign lock (Dungeon Master only);
-        // a non-DM member surfaces as a 403 via the global exception handler.
         await commandRepo.UpdateAsync(campaign, persistImmediately: true, cancellationToken);
 
         return Result.Success();

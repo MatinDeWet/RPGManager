@@ -9,7 +9,7 @@ using WebApi.Application.Repositories.QueryRepos.SecuredRepos;
 
 namespace WebApi.Application.Features.WorldFeatures.SearchWorlds;
 
-internal sealed class SearchWorldsQueryHandler(ISecuredQueryRepo queryRepo)
+internal sealed class SearchWorldsQueryHandler(IWorldSecuredQueryRepo queryRepo)
     : IQueryManager<SearchWorldsQuery, PageableResponse<SearchWorldsResponse>>
 {
     public async Task<Result<PageableResponse<SearchWorldsResponse>>> Handle(SearchWorldsQuery request, CancellationToken cancellationToken)

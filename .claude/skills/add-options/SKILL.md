@@ -33,6 +33,8 @@ In the owning project's DI extension, bind the section:
 services.Configure<BlobStorageOptions>(configuration.GetSection(BlobStorageOptions.SectionName));
 ```
 
+Bind it where that service composes its registrations: **WebApi** in `ServiceCollectionExtensions.AddApplicationServices`; **Worker** in `Worker.Presentation/Program.cs` (it has no single grouping extension). The options *class* lives in the layer that consumes it (e.g. `Worker.Application/Options/` for a job's settings), but the `Configure<T>` binding is a composition-root concern.
+
 Then **consume via injection** — `IOptions<BlobStorageOptions>` (read `.Value` once in a ctor) for long-lived services, or `IOptionsSnapshot<T>` if you need per-request reload. When a value is needed *during* registration (to configure a client), read it eagerly: `configuration.GetSection(<T>.SectionName).Get<T>()` (see `AddJwtAuthentication` / `AddCachingSupport`).
 
 ## 3. Placeholders — `appsettings.json`
@@ -75,5 +77,6 @@ BlobStorage__SecretKey=...
 
 - `appsettings.json` < user-secrets / environment — the empty placeholders are overridden at runtime, so only the values that differ need to be set in each store.
 - Don't override what already has a good code default (e.g. a `ForcePathStyle=true` or a 5-minute expiry) unless the environment needs a different value.
+- **In tests**, `Options.Create(new TOptions { ... })` is the easy way to supply `IOptions<T>`. If the options class sits in a `*.Options` namespace, that namespace shadows the static `Microsoft.Extensions.Options.Options` class — fully-qualify the call (`Microsoft.Extensions.Options.Options.Create(...)`) to resolve the collision.
 - `dotnet build` after adding the class — warnings are errors.
 - For a brand-new library that *introduces* such a section, scaffold the project with `add-integration` first; this skill covers the config wiring within it.

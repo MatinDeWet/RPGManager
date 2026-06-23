@@ -1,0 +1,55 @@
+using Ardalis.Result;
+using CQRS.Core.Contracts;
+using Identification.Constants;
+using Identification.Contracts;
+using Microsoft.EntityFrameworkCore;
+using Shared.Domain.Entities;
+using Shared.Domain.Enums;
+using WebApi.Application.Features.CampaignFeatures.Invitations.Common;
+using WebApi.Application.Repositories.CommandRepos.UnsecuredRepos;
+using WebApi.Application.Repositories.QueryRepos.UnsecuredRepos;
+
+namespace WebApi.Application.Features.CampaignFeatures.Invitations.DeclineInvitation;
+
+internal sealed class DeclineInvitationCommandHandler(
+    ICampaignInvitationUnsecuredQueryRepo queryRepo,
+    IUnsecuredCommandRepo commandRepo,
+    IIdentityInfo identityInfo) : ICommandManager<DeclineInvitationCommand>
+{
+    public async Task<Result> Handle(DeclineInvitationCommand request, CancellationToken cancellationToken)
+    {
+        string tokenHash = InvitationTokens.Hash(request.Token);
+
+        CampaignInvitation? invitation = await queryRepo.Invitations
+            .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
+
+        if (invitation is null)
+        {
+            return Result.NotFound("The invitation was not found.");
+        }
+
+        if (invitation.Status != InvitationStatus.Pending)
+        {
+            return Result.Conflict($"The invitation is '{invitation.Status}' and can no longer be declined.");
+        }
+
+        if (invitation.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            return Result.Conflict("The invitation has expired.");
+        }
+
+        string email = identityInfo.GetValue(ClaimConstants.Email);
+        bool emailVerified = bool.TryParse(identityInfo.GetValue(ClaimConstants.EmailVerified), out bool verified) && verified;
+
+        if (!emailVerified || string.IsNullOrWhiteSpace(email) || CampaignInvitation.NormalizeEmail(email) != invitation.InviteeEmail)
+        {
+            return Result.Forbidden();
+        }
+
+        invitation.Decline();
+
+        await commandRepo.UpdateAsync(invitation, persistImmediately: true, cancellationToken);
+
+        return Result.Success();
+    }
+}

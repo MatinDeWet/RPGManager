@@ -10,13 +10,6 @@ using WebApi.Presentation.Common.CurrentUser;
 
 namespace WebApi.Presentation.Common.Middleware;
 
-/// <summary>
-/// Resolves the authenticated caller to a persisted user on every request: reads the external id
-/// from the token, resolves the user from the cache (only dispatching the upsert command — which
-/// auto-provisions on first login — on a cache miss), then populates the request identity once with
-/// the token claims plus the resolved internal user id. The result is exposed as a
-/// <see cref="UserCacheModel"/>. Anonymous requests pass straight through.
-/// </summary>
 internal sealed class CurrentUserMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(
@@ -35,7 +28,9 @@ internal sealed class CurrentUserMiddleware(RequestDelegate next)
                 UserCacheKeys.ByExternalId(externalId),
                 async ct =>
                 {
-                    Result<UpsertUserResponse> result = await upsertUser.Handle(new UpsertUserCommand(externalId), ct);
+                    string email = context.User.FindFirstValue(ClaimConstants.Email) ?? string.Empty;
+
+                    Result<UpsertUserResponse> result = await upsertUser.Handle(new UpsertUserCommand(externalId, email), ct);
 
                     if (!result.IsSuccess)
                     {

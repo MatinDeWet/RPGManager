@@ -5,8 +5,8 @@ using Worker.Application.Repositories.QueryRepos.UnsecuredRepos;
 
 namespace Worker.infrastructure.Repositories.QueryRepos.UnsecuredRepos;
 
-internal sealed class UnsecuredQueryRepo(CoreContext context)
-    : QueryRepo<CoreContext>(context), IUnsecuredQueryRepo
+internal sealed class UserUnsecuredQueryRepo(CoreContext context)
+    : QueryRepo<CoreContext>(context), IUserUnsecuredQueryRepo
 {
     public IQueryable<User> Users => GetQueryable<User>();
 }
