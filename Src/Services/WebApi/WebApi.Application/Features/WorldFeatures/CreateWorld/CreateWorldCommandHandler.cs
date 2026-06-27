@@ -8,14 +8,14 @@ namespace WebApi.Application.Features.WorldFeatures.CreateWorld;
 
 internal sealed class CreateWorldCommandHandler(
     ISecuredCommandRepo commandRepo,
-    IIdentityInfo identityInfo) : ICommandManager<CreateWorldCommand, CreateWorldResponse>
+    IIdentityInfo identityInfo) : ICommandManager<CreateWorldCommand, long>
 {
-    public async Task<Result<CreateWorldResponse>> Handle(CreateWorldCommand request, CancellationToken cancellationToken)
+    public async Task<Result<long>> Handle(CreateWorldCommand request, CancellationToken cancellationToken)
     {
         var world = World.Create(identityInfo.GetInternalUserId(), request.Name, request.Description);
 
         await commandRepo.InsertAsync(world, persistImmediately: true, cancellationToken);
 
-        return new CreateWorldResponse(world.Id);
+        return world.Id;
     }
 }

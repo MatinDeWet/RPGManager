@@ -6,4 +6,4 @@ namespace WebApi.Application.Features.CampaignFeatures.CreateCampaign;
 /// Creates a new campaign in a world owned by the current user. The creator is enrolled as the
 /// campaign's first Dungeon Master.
 /// </summary>
-public sealed record CreateCampaignCommand(long WorldId, string Name, string? Description) : ICommand<CreateCampaignResponse>;
+public sealed record CreateCampaignCommand(long WorldId, string Name, string? Description) : ICommand<long>;

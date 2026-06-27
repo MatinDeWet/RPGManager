@@ -14,17 +14,17 @@ internal static class CreateCampaignEndpoint
         group.MapPost("/", CreateCampaign)
             .WithName("CreateCampaign")
             .WithSummary("Creates a new campaign in a world owned by the current user.")
-            .ProducesResult<CreateCampaignResponse>();
+            .ProducesResult<long>();
 
         return group;
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> CreateCampaign(
         [FromBody] CreateCampaignCommand command,
-        [FromServices] ICommandManager<CreateCampaignCommand, CreateCampaignResponse> handler,
+        [FromServices] ICommandManager<CreateCampaignCommand, long> handler,
         CancellationToken cancellationToken)
     {
-        Result<CreateCampaignResponse> result = await handler.Handle(command, cancellationToken);
+        Result<long> result = await handler.Handle(command, cancellationToken);
 
         return result.ToMinimalApiResult();
     }

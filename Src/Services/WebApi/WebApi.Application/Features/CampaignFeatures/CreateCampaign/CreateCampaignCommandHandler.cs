@@ -11,9 +11,9 @@ namespace WebApi.Application.Features.CampaignFeatures.CreateCampaign;
 internal sealed class CreateCampaignCommandHandler(
     IWorldSecuredQueryRepo queryRepo,
     ISecuredCommandRepo commandRepo,
-    IIdentityInfo identityInfo) : ICommandManager<CreateCampaignCommand, CreateCampaignResponse>
+    IIdentityInfo identityInfo) : ICommandManager<CreateCampaignCommand, long>
 {
-    public async Task<Result<CreateCampaignResponse>> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
+    public async Task<Result<long>> Handle(CreateCampaignCommand request, CancellationToken cancellationToken)
     {
         bool ownsWorld = await queryRepo.Worlds
             .AnyAsync(x => x.Id == request.WorldId, cancellationToken);
@@ -27,6 +27,6 @@ internal sealed class CreateCampaignCommandHandler(
 
         await commandRepo.InsertAsync(campaign, persistImmediately: true, cancellationToken);
 
-        return new CreateCampaignResponse(campaign.Id);
+        return campaign.Id;
     }
 }
