@@ -13,7 +13,7 @@ internal sealed class OpenApiInfoTransformer : IOpenApiDocumentTransformer
     {
         document.Info ??= new OpenApiInfo();
         document.Info.Title = "RPGManager API";
-        document.Info.Version = "v1";
+        document.Info.Version = context.DocumentName;
         document.Info.Description = "HTTP API for RPGManager — manage worlds, campaigns, members, and invitations.";
 
         return Task.CompletedTask;
