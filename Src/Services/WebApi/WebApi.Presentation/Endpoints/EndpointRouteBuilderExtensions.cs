@@ -3,6 +3,7 @@ using Asp.Versioning.Builder;
 using WebApi.Presentation.Common;
 using WebApi.Presentation.Endpoints.CampaignEndpoints;
 using WebApi.Presentation.Endpoints.InvitationEndpoints;
+using WebApi.Presentation.Endpoints.SessionEndpoints;
 using WebApi.Presentation.Endpoints.UserEndpoints;
 using WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -36,6 +37,7 @@ public static class EndpointRouteBuilderExtensions
         versioned.MapWorldEndpoints();
         versioned.MapCampaignEndpoints();
         versioned.MapInvitationEndpoints();
+        versioned.MapSessionEndpoints();
 
         return app;
     }

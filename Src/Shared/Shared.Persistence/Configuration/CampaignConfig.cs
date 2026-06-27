@@ -38,5 +38,9 @@ internal sealed class CampaignConfig : IEntityTypeConfiguration<Campaign>
         entity.HasMany(x => x.Invitations)
             .WithOne(x => x.Campaign)
             .HasForeignKey(x => x.CampaignId);
+
+        entity.HasMany(x => x.Sessions)
+            .WithOne(x => x.Campaign)
+            .HasForeignKey(x => x.CampaignId);
     }
 }
