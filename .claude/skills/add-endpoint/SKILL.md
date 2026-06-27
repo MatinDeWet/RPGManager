@@ -9,7 +9,7 @@ Minimal APIs grouped per entity. One file per endpoint, all collected in a `<Ent
 
 ## 1. Endpoint file — `Src/Services/WebApi/WebApi.Presentation/Endpoints/<Entity>Endpoints/<Name>Endpoint.cs`
 
-- `internal static class` with a `Map<Name>Endpoint(this RouteGroupBuilder group)` extension; `.WithName(...)` + `.WithSummary(...)`.
+- `internal static class` with a `Map<Name>Endpoint(this RouteGroupBuilder group)` extension; `.WithName(...)` + `.WithSummary(...)` + `.ProducesResult<TResponse>()` (or `.ProducesResult()` for no-content — see **Response metadata** below).
 - Handler method is `private static async Task<Microsoft.AspNetCore.Http.IResult>`; call `handler.Handle(...)` then `return result.ToMinimalApiResult();` (`Ardalis.Result.AspNetCore`).
 - **Be explicit about every input's binding source** (`using Microsoft.AspNetCore.Mvc;`): `[FromRoute]`, `[FromBody]`, `[FromQuery]`/`[AsParameters]`, and `[FromServices]` for injected handlers.
 
@@ -24,7 +24,7 @@ private static async Task<Microsoft.AspNetCore.Http.IResult> GetTransactionById(
     Result<GetTransactionByIdResponse> result = await handler.Handle(new GetTransactionByIdQuery(id), cancellationToken);
     return result.ToMinimalApiResult();
 }
-// route: group.MapGet("/{id:long}", GetTransactionById)
+// route: group.MapGet("/{id:long}", GetTransactionById) … .ProducesResult<GetTransactionByIdResponse>();
 ```
 
 Body (POST):
@@ -34,7 +34,7 @@ private static async Task<Microsoft.AspNetCore.Http.IResult> CreateTransaction(
     [FromBody] CreateTransactionCommand command,
     [FromServices] ICommandManager<CreateTransactionCommand, CreateTransactionResponse> handler,
     CancellationToken cancellationToken) { ... }
-// route: group.MapPost("/", CreateTransaction)
+// route: group.MapPost("/", CreateTransaction) … .ProducesResult<CreateTransactionResponse>();
 ```
 
 Route + body (PUT) — id from route, fields from a body record; compose the command:
@@ -81,6 +81,26 @@ private readonly record struct SearchTransactionsRequest(
 ```
 
 > Do NOT put `[AsParameters]` on a *class* with field-initializer defaults — OpenAPI marks its non-nullable value-type members **required** and Swagger blocks the call. A record struct with constructor defaults keeps them optional.
+
+### Response metadata — always chain `.ProducesResult<T>()`
+
+The handler returns a bare `IResult`, so the OpenAPI generator can't infer the response type or error shapes on its own — without this the document is untyped and client codegen (NSwag/Kiota/openapi-generator) emits `object`/`void`. Chain the shared helper from `WebApi.Presentation.Common.Extensions` (`using WebApi.Presentation.Common.Extensions;`) on the `Map<Name>Endpoint` call. It declares a typed **200** plus the standard `400/401/403/404` `application/problem+json` responses in one call:
+
+```csharp
+// body endpoint (Result<TResponse>) — 200 returns TResponse
+group.MapGet("/{id:long}", GetTransactionById)
+    .WithName("GetTransactionById")
+    .WithSummary("Returns a single transaction owned by the current user.")
+    .ProducesResult<GetTransactionByIdResponse>();
+
+// no-content endpoint (plain Result — delete/update/etc.) — 200 with no body
+group.MapDelete("/{id:long}", DeleteTransaction)
+    .WithName("DeleteTransaction")
+    .WithSummary("Deletes a transaction owned by the current user.")
+    .ProducesResult();
+```
+
+Use `.ProducesResult<TResponse>()` whenever the handler is `IQueryManager<…, TResponse>` / `ICommandManager<…, TResponse>` (the `TResponse` is the success body; for a paged endpoint it's `PageableResponse<…>`), and the parameterless `.ProducesResult()` when the handler is a non-generic `ICommandManager<…>`. Helper source: `Src/Services/WebApi/WebApi.Presentation/Common/Extensions/EndpointMetadataExtensions.cs` (extend it there if the standard status set ever needs to change — don't add per-endpoint `.Produces*` noise).
 
 ## 2. Register in the group — `Endpoints/<Entity>Endpoints/<Entity>Endpoints.cs`
 
