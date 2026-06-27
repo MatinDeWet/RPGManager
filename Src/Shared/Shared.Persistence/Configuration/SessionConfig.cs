@@ -23,6 +23,10 @@ internal sealed class SessionConfig : IEntityTypeConfiguration<Session>
             .HasMaxLength(128)
             .IsRequired();
 
+        entity.HasIndex(x => x.Title)
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
+
         entity.Property(x => x.ScheduledAt)
             .IsRequired();
 
