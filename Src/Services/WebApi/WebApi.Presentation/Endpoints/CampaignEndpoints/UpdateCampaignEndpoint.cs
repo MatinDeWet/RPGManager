@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.UpdateCampaign;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class UpdateCampaignEndpoint
     {
         group.MapPut("/{id:long}", UpdateCampaign)
             .WithName("UpdateCampaign")
-            .WithSummary("Updates the name and description of a campaign. Requires the Dungeon Master role.");
+            .WithSummary("Updates the name and description of a campaign. Requires the Dungeon Master role.")
+            .ProducesResult();
 
         return group;
     }

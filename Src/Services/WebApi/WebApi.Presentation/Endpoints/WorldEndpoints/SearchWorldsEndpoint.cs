@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Pagination.Enums;
 using Pagination.Models.Responses;
 using WebApi.Application.Features.WorldFeatures.SearchWorlds;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -14,7 +15,8 @@ internal static class SearchWorldsEndpoint
     {
         group.MapGet("/", SearchWorlds)
             .WithName("SearchWorlds")
-            .WithSummary("Returns a page of the current user's worlds, optionally filtered by name.");
+            .WithSummary("Returns a page of the current user's worlds, optionally filtered by name.")
+            .ProducesResult<PageableResponse<SearchWorldsResponse>>();
 
         return group;
     }

@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddExceptionHandler<ValidationExceptionHandler>();          // 400, specific
         services.AddExceptionHandler<GlobalExceptionHandler>();              // 500, catch-all (last)
 
+        services.AddApiVersioningSupport();
         services.AddApiDocumentation();
         services.AddJwtAuthentication(configuration);
         services.AddApplicationOptions(configuration);

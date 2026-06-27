@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.Invitations.CreateInvitation;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class CreateInvitationEndpoint
     {
         group.MapPost("/{id:long}/invitations", CreateInvitation)
             .WithName("CreateInvitation")
-            .WithSummary("Creates an email-bound invitation to a campaign. Requires the Dungeon Master role.");
+            .WithSummary("Creates an email-bound invitation to a campaign. Requires the Dungeon Master role.")
+            .ProducesResult<CreateInvitationResponse>();
 
         return group;
     }

@@ -1,9 +1,6 @@
 using WebApi.Presentation.Common.DIExtensions;
 using WebApi.Presentation.Common.Middleware;
-using WebApi.Presentation.Endpoints.CampaignEndpoints;
-using WebApi.Presentation.Endpoints.InvitationEndpoints;
-using WebApi.Presentation.Endpoints.UserEndpoints;
-using WebApi.Presentation.Endpoints.WorldEndpoints;
+using WebApi.Presentation.Endpoints;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -25,10 +22,7 @@ app.UseAuthorization();
 
 app.UseMiddleware<CurrentUserMiddleware>();
 
-app.MapUserEndpoints();
-app.MapWorldEndpoints();
-app.MapCampaignEndpoints();
-app.MapInvitationEndpoints();
+app.MapApiEndpoints();
 
 await app.ApplyDatabaseMigrationsAsync();
 

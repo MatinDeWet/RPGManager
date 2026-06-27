@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.Invitations.DeclineInvitation;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.InvitationEndpoints;
 
@@ -12,7 +13,8 @@ internal static class DeclineInvitationEndpoint
     {
         group.MapPost("/decline", DeclineInvitation)
             .WithName("DeclineInvitation")
-            .WithSummary("Declines an invitation using its token. The signed-in user's email must match the invitee.");
+            .WithSummary("Declines an invitation using its token. The signed-in user's email must match the invitee.")
+            .ProducesResult();
 
         return group;
     }

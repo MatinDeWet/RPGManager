@@ -1,5 +1,7 @@
+using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using WebApi.Presentation.Common;
 using WebApi.Presentation.Common.OpenApi;
 using WebApi.Presentation.Common.Options;
 
@@ -7,10 +9,17 @@ namespace WebApi.Presentation.Common.DIExtensions;
 
 public static class OpenApiExtensions
 {
-    /// <summary>Registers the built-in OpenAPI document generator with the OAuth2 security scheme.</summary>
+    /// <summary>Registers one built-in OpenAPI document per API version, each with the OAuth2 security scheme.</summary>
     public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
     {
-        services.AddOpenApi(options => options.AddDocumentTransformer<OAuthSecuritySchemeTransformer>());
+        foreach (string documentName in ApiVersions.AllGroupNames)
+        {
+            services.AddOpenApi(documentName, options =>
+            {
+                options.AddDocumentTransformer<OpenApiInfoTransformer>();
+                options.AddDocumentTransformer<OAuthSecuritySchemeTransformer>();
+            });
+        }
 
         return services;
     }
@@ -27,9 +36,18 @@ public static class OpenApiExtensions
         SwaggerAuthenticationSettings swagger = app.Services
             .GetRequiredService<IOptions<AuthenticationSettings>>().Value.Swagger;
 
+        IApiVersionDescriptionProvider provider = app.Services
+            .GetRequiredService<IApiVersionDescriptionProvider>();
+
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/openapi/v1.json", "RPGManager API v1");
+            foreach (ApiVersionDescription description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint(
+                    $"/openapi/{description.GroupName}.json",
+                    $"RPGManager API {description.GroupName.ToUpperInvariant()}");
+            }
+
             options.OAuthClientId(swagger.ClientId);
             options.OAuthUsePkce();
             options.OAuthScopeSeparator(" ");

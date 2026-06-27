@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Pagination.Enums;
 using Pagination.Models.Responses;
 using WebApi.Application.Features.CampaignFeatures.Invitations.SearchInvitations;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -14,7 +15,8 @@ internal static class SearchInvitationsEndpoint
     {
         group.MapGet("/{id:long}/invitations", SearchInvitations)
             .WithName("SearchInvitations")
-            .WithSummary("Returns a page of the pending invitations of a campaign. Requires the Dungeon Master role.");
+            .WithSummary("Returns a page of the pending invitations of a campaign. Requires the Dungeon Master role.")
+            .ProducesResult<PageableResponse<SearchInvitationsResponse>>();
 
         return group;
     }

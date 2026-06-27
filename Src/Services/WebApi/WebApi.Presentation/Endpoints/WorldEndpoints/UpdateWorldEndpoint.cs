@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.WorldFeatures.UpdateWorld;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -12,7 +13,8 @@ internal static class UpdateWorldEndpoint
     {
         group.MapPut("/{id:long}", UpdateWorld)
             .WithName("UpdateWorld")
-            .WithSummary("Updates the name and description of a world owned by the current user.");
+            .WithSummary("Updates the name and description of a world owned by the current user.")
+            .ProducesResult();
 
         return group;
     }

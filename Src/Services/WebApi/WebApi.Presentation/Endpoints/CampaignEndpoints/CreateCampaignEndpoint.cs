@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.CreateCampaign;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class CreateCampaignEndpoint
     {
         group.MapPost("/", CreateCampaign)
             .WithName("CreateCampaign")
-            .WithSummary("Creates a new campaign in a world owned by the current user.");
+            .WithSummary("Creates a new campaign in a world owned by the current user.")
+            .ProducesResult<CreateCampaignResponse>();
 
         return group;
     }
