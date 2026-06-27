@@ -19,6 +19,8 @@ public class Campaign : Entity<long>
 
     public virtual ICollection<CampaignInvitation> Invitations { get; private set; } = [];
 
+    public virtual ICollection<Session> Sessions { get; private set; } = [];
+
     public static Campaign Create(long worldId, long creatorUserId, string name, string? description)
     {
         var campaign = new Campaign
