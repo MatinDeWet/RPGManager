@@ -14,17 +14,17 @@ internal static class CreateWorldEndpoint
         group.MapPost("/", CreateWorld)
             .WithName("CreateWorld")
             .WithSummary("Creates a new world owned by the current user.")
-            .ProducesResult<CreateWorldResponse>();
+            .ProducesResult<long>();
 
         return group;
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> CreateWorld(
         [FromBody] CreateWorldCommand command,
-        [FromServices] ICommandManager<CreateWorldCommand, CreateWorldResponse> handler,
+        [FromServices] ICommandManager<CreateWorldCommand, long> handler,
         CancellationToken cancellationToken)
     {
-        Result<CreateWorldResponse> result = await handler.Handle(command, cancellationToken);
+        Result<long> result = await handler.Handle(command, cancellationToken);
 
         return result.ToMinimalApiResult();
     }

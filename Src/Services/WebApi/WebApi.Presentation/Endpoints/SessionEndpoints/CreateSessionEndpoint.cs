@@ -14,17 +14,17 @@ internal static class CreateSessionEndpoint
         group.MapPost("/", CreateSession)
             .WithName("CreateSession")
             .WithSummary("Creates a new session in a campaign. Requires the Dungeon Master role.")
-            .ProducesResult<CreateSessionResponse>();
+            .ProducesResult<long>();
 
         return group;
     }
 
     private static async Task<Microsoft.AspNetCore.Http.IResult> CreateSession(
         [FromBody] CreateSessionCommand command,
-        [FromServices] ICommandManager<CreateSessionCommand, CreateSessionResponse> handler,
+        [FromServices] ICommandManager<CreateSessionCommand, long> handler,
         CancellationToken cancellationToken)
     {
-        Result<CreateSessionResponse> result = await handler.Handle(command, cancellationToken);
+        Result<long> result = await handler.Handle(command, cancellationToken);
 
         return result.ToMinimalApiResult();
     }

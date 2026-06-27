@@ -10,9 +10,9 @@ namespace WebApi.Application.Features.SessionFeatures.CreateSession;
 internal sealed class CreateSessionCommandHandler(
     ICampaignSecuredQueryRepo campaignRepo,
     ISessionSecuredQueryRepo sessionRepo,
-    ISecuredCommandRepo commandRepo) : ICommandManager<CreateSessionCommand, CreateSessionResponse>
+    ISecuredCommandRepo commandRepo) : ICommandManager<CreateSessionCommand, long>
 {
-    public async Task<Result<CreateSessionResponse>> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<long>> Handle(CreateSessionCommand request, CancellationToken cancellationToken)
     {
         bool campaignVisible = await campaignRepo.Campaigns
             .AnyAsync(x => x.Id == request.CampaignId, cancellationToken);
@@ -31,6 +31,6 @@ internal sealed class CreateSessionCommandHandler(
 
         await commandRepo.InsertAsync(session, persistImmediately: true, cancellationToken);
 
-        return new CreateSessionResponse(session.Id);
+        return session.Id;
     }
 }
