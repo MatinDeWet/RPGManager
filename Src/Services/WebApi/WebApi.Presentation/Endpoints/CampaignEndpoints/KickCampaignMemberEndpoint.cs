@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.Members.KickCampaignMember;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class KickCampaignMemberEndpoint
     {
         group.MapDelete("/{id:long}/members/{userId:long}", KickCampaignMember)
             .WithName("KickCampaignMember")
-            .WithSummary("Removes a member from a campaign. Requires the Dungeon Master role; the Dungeon Master cannot be removed.");
+            .WithSummary("Removes a member from a campaign. Requires the Dungeon Master role; the Dungeon Master cannot be removed.")
+            .ProducesResult();
 
         return group;
     }

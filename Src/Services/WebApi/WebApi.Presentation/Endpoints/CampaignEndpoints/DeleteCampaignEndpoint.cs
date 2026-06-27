@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.DeleteCampaign;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class DeleteCampaignEndpoint
     {
         group.MapDelete("/{id:long}", DeleteCampaign)
             .WithName("DeleteCampaign")
-            .WithSummary("Deletes a campaign. Requires the Dungeon Master role.");
+            .WithSummary("Deletes a campaign. Requires the Dungeon Master role.")
+            .ProducesResult();
 
         return group;
     }

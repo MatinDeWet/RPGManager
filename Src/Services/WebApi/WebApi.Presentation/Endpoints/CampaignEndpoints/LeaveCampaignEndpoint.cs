@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.Members.LeaveCampaign;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class LeaveCampaignEndpoint
     {
         group.MapDelete("/{id:long}/members/me", LeaveCampaign)
             .WithName("LeaveCampaign")
-            .WithSummary("Removes the current user's own membership from a campaign. The Dungeon Master cannot leave.");
+            .WithSummary("Removes the current user's own membership from a campaign. The Dungeon Master cannot leave.")
+            .ProducesResult();
 
         return group;
     }

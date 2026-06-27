@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.CampaignFeatures.GetCampaignById;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -12,7 +13,8 @@ internal static class GetCampaignByIdEndpoint
     {
         group.MapGet("/{id:long}", GetCampaignById)
             .WithName("GetCampaignById")
-            .WithSummary("Returns a single campaign the current user is a member of.");
+            .WithSummary("Returns a single campaign the current user is a member of.")
+            .ProducesResult<GetCampaignByIdResponse>();
 
         return group;
     }

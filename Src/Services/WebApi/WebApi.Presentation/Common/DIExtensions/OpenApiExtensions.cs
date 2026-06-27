@@ -10,7 +10,11 @@ public static class OpenApiExtensions
     /// <summary>Registers the built-in OpenAPI document generator with the OAuth2 security scheme.</summary>
     public static IServiceCollection AddApiDocumentation(this IServiceCollection services)
     {
-        services.AddOpenApi(options => options.AddDocumentTransformer<OAuthSecuritySchemeTransformer>());
+        services.AddOpenApi(options =>
+        {
+            options.AddDocumentTransformer<OpenApiInfoTransformer>();
+            options.AddDocumentTransformer<OAuthSecuritySchemeTransformer>();
+        });
 
         return services;
     }

@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.WorldFeatures.DeleteWorld;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -12,7 +13,8 @@ internal static class DeleteWorldEndpoint
     {
         group.MapDelete("/{id:long}", DeleteWorld)
             .WithName("DeleteWorld")
-            .WithSummary("Deletes a world owned by the current user.");
+            .WithSummary("Deletes a world owned by the current user.")
+            .ProducesResult();
 
         return group;
     }

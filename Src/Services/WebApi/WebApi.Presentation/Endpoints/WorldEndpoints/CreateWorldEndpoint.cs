@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.WorldFeatures.CreateWorld;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -12,7 +13,8 @@ internal static class CreateWorldEndpoint
     {
         group.MapPost("/", CreateWorld)
             .WithName("CreateWorld")
-            .WithSummary("Creates a new world owned by the current user.");
+            .WithSummary("Creates a new world owned by the current user.")
+            .ProducesResult<CreateWorldResponse>();
 
         return group;
     }

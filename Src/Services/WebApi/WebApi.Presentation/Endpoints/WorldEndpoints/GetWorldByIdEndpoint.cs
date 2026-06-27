@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.WorldFeatures.GetWorldById;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.WorldEndpoints;
 
@@ -12,7 +13,8 @@ internal static class GetWorldByIdEndpoint
     {
         group.MapGet("/{id:long}", GetWorldById)
             .WithName("GetWorldById")
-            .WithSummary("Returns a single world owned by the current user.");
+            .WithSummary("Returns a single world owned by the current user.")
+            .ProducesResult<GetWorldByIdResponse>();
 
         return group;
     }

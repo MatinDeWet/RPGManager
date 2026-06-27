@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Pagination.Enums;
 using Pagination.Models.Responses;
 using WebApi.Application.Features.CampaignFeatures.SearchCampaigns;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.CampaignEndpoints;
 
@@ -14,7 +15,8 @@ internal static class SearchCampaignsEndpoint
     {
         group.MapGet("/", SearchCampaigns)
             .WithName("SearchCampaigns")
-            .WithSummary("Returns a page of the current user's campaigns, optionally filtered by name and world.");
+            .WithSummary("Returns a page of the current user's campaigns, optionally filtered by name and world.")
+            .ProducesResult<PageableResponse<SearchCampaignsResponse>>();
 
         return group;
     }

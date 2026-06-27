@@ -3,6 +3,7 @@ using Ardalis.Result.AspNetCore;
 using CQRS.Core.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Application.Features.UserFeatures.GetUser;
+using WebApi.Presentation.Common.Extensions;
 
 namespace WebApi.Presentation.Endpoints.UserEndpoints;
 
@@ -12,7 +13,8 @@ internal static class GetUserEndpoint
     {
         group.MapGet("/me", GetCurrentUser)
             .WithName("GetCurrentUser")
-            .WithSummary("Returns the currently authenticated user.");
+            .WithSummary("Returns the currently authenticated user.")
+            .ProducesResult<GetUserResponse>();
 
         return group;
     }
